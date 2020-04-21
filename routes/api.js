@@ -1,0 +1,27 @@
+var express = require('express')
+var router = express.Router()
+
+var author = require('./authors.route')
+var album = require('./albums.route')
+var user = require('./users.route')
+var post = require('./posts.route')
+var follow = require('./follows.route')
+var comment = require('./comments.route')
+var like = require('./likes.route')
+var playlist = require('./playlists.route')
+var song = require('./songs.route')
+var singer = require('./singers.route')
+var post = require('./posts.route')
+
+router.use('/user', user)
+router.use('/author', author)
+router.use('/album', album)
+router.use('/post', post)
+router.use('/follow', follow)
+router.use('/comment', comment)
+router.use('/like', like)
+router.use('/playlist', playlist)
+router.use('/singer', singer)
+router.use('/song', song)
+
+module.exports = router
