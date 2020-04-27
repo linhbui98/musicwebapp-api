@@ -13,10 +13,10 @@ module.exports = function(req, res, next) {
         if (!decoded) {
             throw constants.AUTHORIZATION_FAILED
         }
-        if (!permission[decoded.Role].includes(req.url.split('?')[0].split('/')[2])) {
-            throw constants.PERMISSION_DENY
-        }
-        req.userId = decoded.ID
+        // if (!permission[decoded.Role].includes(req.url.split('?')[0].split('/')[2])) {
+        //     throw constants.PERMISSION_DENY
+        // }
+        req.userId = decoded.id 
         return next()
     } catch(error) {
         return res.send({ status: 2, result: error })

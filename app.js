@@ -22,7 +22,7 @@ var api = require('./routes/api')
 
 mongoose.connect(
   dbUrl,
-  {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true,}, 
+  {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false},  
   () => console.log('db connected')
 )
 
@@ -41,8 +41,8 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 app.get('/', indexRoute)
 app.post('/login', loginHandle)
-// app.use('/api', auth, api)
-app.use('/api', api)
+app.use('/api', auth, api)
+// app.use('/api', api)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
