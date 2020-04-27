@@ -5,24 +5,25 @@ var cookieParser = require('cookie-parser')
 var bodyParser = require('body-parser')
 var logger = require('morgan')
 var cors = require('cors')
-var config = require('./config/config')
+var config = require('./config').mongodb
 var mongoose = require('mongoose')
 
 // database url
-var dbUrl = `${config.host}/${config.database}`
+var dbUrl = `mongodb://${config.host}:${config.port}/${config.database}`
 // auth
 var loginHandle = require('./auth/login').loginHandle
 var auth = require('./auth/auth')
 
+console.log('dbUrl', dbUrl)
+
 // api
 var indexRoute = require('./routes/index')
 var api = require('./routes/api')
-var songController = require('./controllers/songs.controller')
 
 mongoose.connect(
   dbUrl,
-  {useNewUrlParser: true, useUnifiedTopology: true}, 
-  () => console.log('connected')
+  {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true,}, 
+  () => console.log('db connected')
 )
 
 var app = express()
@@ -39,9 +40,9 @@ app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
 app.get('/', indexRoute)
-app.get('/song', songController.findAll)
 app.post('/login', loginHandle)
 // app.use('/api', auth, api)
+app.use('/api', api)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

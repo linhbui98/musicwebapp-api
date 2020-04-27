@@ -17,68 +17,74 @@ const userSchema = mongoose.Schema({
         required: true,
         minLength: 3,
     },
-    // fullName: {
-    //     type: String,
-    //     required: true,
-    // },
+    fullName: {
+        type: String,
+        required: true,
+    },
     role_id:{
         type: ObjectId,
         required: true,
         trim: true,
     },
-    // email: {
-    //     type: String,
-    //     match: /^\S+@\S+\.\S+$/,
-    //     required: true,
-    //     unique: true,
-    //     trim: true,
-    //     lowercase: true,
-    //     validate: value => {
-    //         if (!validator.isEmail(value)) {
-    //             throw new Error({ error: 'Invalid Email address' })
-    //         }
-    //     }
-    // },
+    email: {
+        type: String,
+        match: /^\S+@\S+\.\S+$/,
+        required: true,
+        unique: true,
+        trim: true,
+        lowercase: true,
+        validate: value => {
+            if (!validator.isEmail(value)) {
+                throw new Error({ error: 'Invalid Email address' })
+            }
+        }
+    },
     isActive: {
         type: Boolean,
         required: true,
     },
-    // posts: [
-    //     {
-    //       type: Schema.Types.ObjectId,
-    //       ref: 'Post',
-    //     },
-    // ],
-    // likes: [
-    //     {
-    //         type: Schema.Types.ObjectId,
-    //         ref: 'Like',
-    //     },
-    // ],
-    // comments: [
-    //     {
-    //         type: Schema.Types.ObjectId,
-    //         ref: 'Comment',
-    //     },
-    // ],
-    // followers: [
-    //     {
-    //         type: Schema.Types.ObjectId,
-    //         ref: 'Follow',
-    //     },
-    // ],
-    // following: [
-    //     {
-    //         type: Schema.Types.ObjectId,
-    //         ref: 'Follow',
-    //     },
-    // ],
-    // notifications: [
-    //     {
-    //         type: Schema.Types.ObjectId,
-    //         ref: 'Notification',
-    //     },
-    // ],
+    playlists: [
+        {
+          type: ObjectId,
+          ref: 'Playlist',
+        },
+    ],
+    posts: [
+        {
+          type: ObjectId,
+          ref: 'Post',
+        },
+    ],
+    likes: [
+        {
+            type: ObjectId,
+            ref: 'Like',
+        },
+    ],
+    comments: [
+        {
+            type: ObjectId,
+            ref: 'Comment',
+        },
+    ],
+    followers: [
+        {
+            type: ObjectId,
+            ref: 'Follow',
+        },
+    ],
+    following: [
+        {
+            type: ObjectId,
+            ref: 'Follow',
+        },
+    ],
+    notifications: [
+        {
+            type: ObjectId,
+            ref: 'Notification',
+        },
+    ],
 });
 
 // Comparre password
@@ -88,6 +94,19 @@ userSchema.methods.comparePassword = function(candidatePassword, cb) {
         cb(null, isMatch);
     });
 };
+
+userSchema.statics.findByCredentials = async (username, password) => {
+    // Search for a user by email and password.
+    const user = await User.findOne({ username: username }).exec()
+    if (!user) {
+        throw new Error('Invalid user!')
+    }
+    const isPasswordMatch = await bcrypt.compare(password, user.password)
+    if (!isPasswordMatch) {
+        throw new Error('Invalid user or password!')
+    }
+    return user
+}
 
 // Hashes the users password when saving it to DB
 userSchema.pre('save', function(next) {

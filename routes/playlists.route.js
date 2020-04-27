@@ -5,4 +5,7 @@ var router = express.Router();
 // get list playlists
 router.get('/', playistController.findAll);
 
+// create playlist
+router.post('/create-playlist', playistController.create);
+
 module.exports = router;

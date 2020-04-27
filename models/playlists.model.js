@@ -6,10 +6,10 @@ const Schema = mongoose.Schema;
 const playlistSchema = Schema(
   {
     name: String,
-    songs: {
+    songs: [{
       type: Schema.Types.ObjectId,
       ref: 'Song',
-    },
+    }],
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',

@@ -7,7 +7,6 @@ module.exports = {
                 res.json(likes)
               });
         } catch (error) {
-            // res.status(400).send(error)
             res.json(error.message)
         }
     }

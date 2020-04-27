@@ -5,7 +5,8 @@ const Schema = mongoose.Schema;
 
 const postSchema = Schema(
   {
-    title: String,
+    content: String,
+    isDelete: Boolean,
     song: {
       type: Schema.Types.ObjectId,
       ref: 'Song',

@@ -1,11 +1,11 @@
 const jwt = require('jsonwebtoken')
-const privateKey = require('../config/config').privateKey
+const privateKey = require('../config').privateKey
 const constants = require('../common/constants')
 const permission = require('./permission')
 
 module.exports = function(req, res, next) {
     try {
-        const token = req.headers.authorization ? req.headers.authorization.split(" ")[1] : null
+        const token = getTokenFromHeader(req)
         if (!token) {
             throw constants.AUTHORIZATION_FAILED
         }
@@ -22,4 +22,13 @@ module.exports = function(req, res, next) {
         return res.send({ status: 2, result: error })
     }
     
+}
+
+function getTokenFromHeader(req){
+  if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Token' ||
+      req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+    return req.headers.authorization.split(' ')[1];
+  }
+
+  return null;
 }
