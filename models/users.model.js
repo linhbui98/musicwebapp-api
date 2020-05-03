@@ -26,6 +26,9 @@ const userSchema = mongoose.Schema({
     //     required: true,
     //     trim: true,
     // },
+    avatar: {
+        type: String,
+    },
     email: {
         type: String,
         match: /^\S+@\S+\.\S+$/,
@@ -96,7 +99,7 @@ userSchema.pre('save', function(next) {
     if (!user.isModified('password')) return next();
 
     // hash password
-    const hashPassword = crypto.createHash('sha1').update(password).digest('base64')
+    const hashPassword = crypto.createHash('sha1').update(user.password).digest('base64')
     user.password = hashPassword;
     next();
 });

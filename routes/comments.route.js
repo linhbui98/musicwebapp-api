@@ -6,7 +6,7 @@ var router = express.Router();
 router.get('/', commentController.findAll);
 
 // create comment
-router.post('/', commentController.createComment);
+router.post('/:postId', commentController.createComment);
 
 // update comment
 router.put('/:id', commentController.updateComment);

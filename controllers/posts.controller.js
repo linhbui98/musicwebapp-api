@@ -10,8 +10,8 @@ module.exports = {
             await Post.find({})
                 .populate('song')
                 .populate('user')
-                .populate('like')
-                .populate('comment')
+                // .populate('likes')
+                // .populate('comments')
                 .limit(perPage)
                 .skip(perPage * (page-1))
                 .exec(function (err, posts) {

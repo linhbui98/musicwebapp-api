@@ -5,4 +5,10 @@ var router = express.Router();
 // get list likes
 router.get('/', likeController.findAll);
 
+// get list likes
+router.post('/:postId', likeController.createLike);
+
+// get list likes
+router.delete('/:id', likeController.deleteLike);
+
 module.exports = router;

@@ -26,6 +26,8 @@ mongoose.connect(
   () => console.log('db connected')
 )
 
+// var seeder = require('./seed')
+
 var app = express()
 
 // view engine setup

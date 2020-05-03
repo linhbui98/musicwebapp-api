@@ -6,11 +6,19 @@ const router = require('express').Router()
 router.get('/', userController.findAll);
 // get user by id
 router.get('/:id', userController.findById);
+// get profile
+router.get('/profile', userController.getProfile);
 // create user
-router.post('/', userController.createUser);
+// router.post('/', userController.createUser);
 // update user
-router.put('/:id', userController.updateUser);
+router.put('/', userController.updateUser);
+// change avatar
+router.put('/changeAvatar', userController.changeAvatar);
 // delete user
-router.delete('/:id', userController.deleteUser);
+router.put('/inactive', userController.inactiveUser);
+// reactive user
+router.put('/reactive', userController.reactiveUser);
+// delete user forever
+router.delete('/', userController.deleteUserForever);
 
 module.exports = router
