@@ -4,6 +4,8 @@ var router = express.Router();
 
 // get list posts
 router.get('/', postController.findAll);
+// get posts by id
+router.get('/:id', postController.findById);
 // create post
 router.post('/', postController.createPost);
 // update post

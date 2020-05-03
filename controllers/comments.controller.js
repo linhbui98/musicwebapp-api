@@ -47,7 +47,6 @@ module.exports = {
 
     },
 
-    // chua xoa duoc cmt trong post
     deleteComment: async (req, res) => {
         const id = req.params.id
         const userId = req.userId

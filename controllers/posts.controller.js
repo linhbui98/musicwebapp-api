@@ -10,13 +10,29 @@ module.exports = {
             await Post.find({})
                 .populate('song')
                 .populate('user')
-                // .populate('likes')
-                // .populate('comments')
+                .populate('likes')
+                .populate('comments')
                 .limit(perPage)
                 .skip(perPage * (page-1))
                 .exec(function (err, posts) {
                     if (err) return handleError(err);
                     res.json(posts)
+                });
+        } catch (error) {
+            res.json(error.message)
+        }
+    },
+    findById: async (req, res) => {
+        const id = req.params.id
+        try {
+            await Post.find({_id: id})
+                .populate('song')
+                .populate('user')
+                .populate('likes')
+                .populate('comments')
+                .exec(function (err, post) {
+                    if (err) return handleError(err);
+                    res.json(post)
                 });
         } catch (error) {
             res.json(error.message)

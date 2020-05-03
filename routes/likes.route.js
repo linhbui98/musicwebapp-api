@@ -9,6 +9,6 @@ router.get('/', likeController.findAll);
 router.post('/:postId', likeController.createLike);
 
 // get list likes
-router.delete('/:id', likeController.deleteLike);
+router.delete('/:postId', likeController.deleteLike);
 
 module.exports = router;

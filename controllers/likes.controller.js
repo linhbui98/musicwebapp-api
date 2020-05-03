@@ -43,25 +43,26 @@ module.exports = {
         }
     },
     deleteLike: async (req, res) => {
-        // const id = req.params.id
-        // const userId = req.userId
-        // try {
+        const postId = req.params.postId
+        const userId = req.userId
 
-        //     const like = await Follow.findByIdAndRemove(id);
+        try {
 
-        //     // Delete follow from users collection
-        //     await User.findOneAndUpdate(
-        //         { _id: follow.user },
-        //         { $pull: { followers: follow._id } }
-        //     );
-        //     await Post.findOneAndUpdate(
-        //         { _id: follow.follower },
-        //         { $pull: { post: like._id } }
-        //     );
+            const like = await Like.findOneAndRemove({ user: userId })
+            console.log(like)
+            // Delete likes from users collection, post collection
+            await User.findOneAndUpdate(
+                { _id: userId },
+                { $pull: { likes: like._id } }
+            );
+            await Post.findOneAndUpdate(
+                { _id: postId },
+                { $pull: { likes: like._id } }
+            );
 
-        //     return res.json(follow);
-        // } catch (error) {
-        //     res.json(error.message)
-        // }
+            res.json(like)
+        } catch (error) {
+            res.json(error.message)
+        }
     }
 };
