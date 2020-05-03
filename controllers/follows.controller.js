@@ -28,11 +28,11 @@ module.exports = {
 
       // Push follower/following to user collection
       await User.findOneAndUpdate(
-        { _id: userId },
+        { _id: data.followerId },
         { $push: { followers: follow._id } }
       );
       await User.findOneAndUpdate(
-        { _id: data.followerId },
+        { _id: userId },
         { $push: { following: follow._id } }
       );
 
@@ -50,11 +50,11 @@ module.exports = {
       // Delete follow from users collection
       await User.findOneAndUpdate(
         { _id: follow.user },
-        { $pull: { followers: follow._id } }
+        { $pull: { following: follow._id } }
       );
       await User.findOneAndUpdate(
         { _id: follow.follower },
-        { $pull: { following: follow._id } }
+        { $pull: { followers: follow._id } }
       );
 
       return res.json(follow);
