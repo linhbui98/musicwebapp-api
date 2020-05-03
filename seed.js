@@ -4,6 +4,14 @@ const Post = require('./models/posts.model');
 const Song = require('./models/songs.model');
 const Follow = require('./models/follows.model');
 const Playlist = require('./models/playlists.model');
+var config = require('./config').mongodb
+
+var dbUrl = `mongodb://${config.host}:${config.port}/${config.database}`
+mongoose.connect(
+  dbUrl,
+  {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false},  
+  () => console.log('db connected')
+)
 
 const users = [
   {
