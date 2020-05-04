@@ -4,20 +4,26 @@ const User = require('../models/users.model');
 
 module.exports = {
     findAll: async (req, res) => {
+        const userId = req.userId
         const perPage = 5
         const page = req.query.page || 1
         try {
-            await Post.find({})
+            let posts = await Post.find({})
                 .populate('song')
                 .populate('user')
                 .populate('likes')
                 .populate('comments')
                 .limit(perPage)
-                .skip(perPage * (page-1))
-                .exec(function (err, posts) {
-                    if (err) return handleError(err);
-                    res.json(posts)
-                });
+                .skip(perPage * (page - 1))
+              
+            posts = posts.map(post => {
+                let likes = post.likes.filter(like => {
+                    return like.user == userId;
+                })
+                likes.length === 1 ? post._doc.isLike = true : post._doc.isLike = false
+                return post;
+            })
+            res.json(posts)
         } catch (error) {
             res.json(error.message)
         }
@@ -25,7 +31,7 @@ module.exports = {
     findById: async (req, res) => {
         const id = req.params.id
         try {
-            await Post.find({_id: id})
+            await Post.find({ _id: id })
                 .populate('song')
                 .populate('user')
                 .populate('likes')
@@ -61,11 +67,11 @@ module.exports = {
         const data = { ...req.body }
 
         try {
-            await Post.findOne({ _id: postId})
+            await Post.findOne({ _id: postId })
                 .populate('user')
                 .exec(function (err, post) {
                     if (err) return handleError(err);
-                    if (userId.toString() !== post.user._id.toString()){
+                    if (userId.toString() !== post.user._id.toString()) {
                         return res.sendStatus(403);
                     }
                 });
@@ -82,11 +88,11 @@ module.exports = {
         const postId = req.params.id
 
         try {
-            await Post.findOne({ _id: postId})
+            await Post.findOne({ _id: postId })
                 .populate('user')
                 .exec(function (err, post) {
                     if (err) return handleError(err);
-                    if (userId.toString() !== post.user._id.toString()){
+                    if (userId.toString() !== post.user._id.toString()) {
                         return res.sendStatus(403);
                     }
                 });
