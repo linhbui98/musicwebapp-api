@@ -48,7 +48,7 @@ module.exports = {
 
         try {
 
-            const like = await Like.findOneAndRemove({ user: userId })
+            const like = await Like.findOneAndRemove({ user: userId, post: postId })
             console.log(like)
             // Delete likes from users collection, post collection
             await User.findOneAndUpdate(

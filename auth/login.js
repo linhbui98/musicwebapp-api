@@ -22,8 +22,7 @@ module.exports.loginHandle = async function (req, res) {
         }
 
         let userInfo = {...user._doc}
-        let token = jwt.sign({id: userInfo._id, username: userInfo.username}, privateKey, {expiresIn: '100h'})
-        console.log("token", token)
+        let token = jwt.sign({id: userInfo._id, username: userInfo.username, userInfo: userInfo}, privateKey, {expiresIn: '100h'})
         const data = {
             status: 1,
             result: {
