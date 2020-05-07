@@ -14,6 +14,18 @@ module.exports = {
             res.json(error.message)
         }
     },
+    getCommentByPost: async (req, res) => {
+        const postId = req.params.postId
+        try {
+            let comments = await Comment.find({
+                post: postId
+            })
+            .populate('user')
+            res.json(comments)
+        } catch (error) {
+            res.json(error.message)
+        }
+    },
     createComment: async (req, res) => {
         const data = { ...req.body }
         const userId = req.userId

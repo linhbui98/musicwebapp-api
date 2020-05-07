@@ -8,6 +8,9 @@ router.get('/', commentController.findAll);
 // create comment
 router.post('/:postId', commentController.createComment);
 
+// list comments by post
+router.get('/:postId', commentController.getCommentByPost);
+
 // update comment
 router.put('/:id', commentController.updateComment);
 
