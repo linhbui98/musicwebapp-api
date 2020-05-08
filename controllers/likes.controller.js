@@ -13,6 +13,18 @@ module.exports = {
             res.json(error.message)
         }
     },
+    getLikeByPost: async (req, res) => {
+        const postId = req.params.postId
+        try {
+            let likes = await Like.find({
+                post: postId
+            })
+            .populate('user')
+            res.json(likes)
+        } catch (error) {
+            res.json(error.message)
+        }
+    },
     createLike: async (req, res) => {
         const userId = req.userId
         const postId = req.params.postId

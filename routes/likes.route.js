@@ -5,6 +5,9 @@ var router = express.Router();
 // get list likes
 router.get('/', likeController.findAll);
 
+// list like by post
+router.get('/:postId', likeController.getLikeByPost);
+
 // get list likes
 router.post('/:postId', likeController.createLike);
 
