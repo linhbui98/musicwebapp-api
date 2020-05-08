@@ -31,7 +31,7 @@ module.exports = {
                 // .populate('notifications')
                 // .populate('following')
                 // .populate('followers')
-                .populate('playlists')
+                // .populate('playlists')
                 .exec(function (err, users) {
                     if (err) console.log("err", err)
                     res.json(users)

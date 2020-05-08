@@ -10,6 +10,10 @@ const playlistSchema = Schema(
       type: Schema.Types.ObjectId,
       ref: 'Song',
     }],
+    posts: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Post',
+    }],
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',

@@ -45,22 +45,22 @@ module.exports = {
             res.json(error.message)
         }
     },
-    savePostToPlaylist: async (req, res) => {
-        const userId = req.userId
-        const playlistId = req.body.playlistId
-        const postId = req.params.id
+    // savePostToPlaylist: async (req, res) => {
+    //     const userId = req.userId
+    //     const playlistId = req.body.playlistId
+    //     const postId = req.params.id
 
-        try {
-            const post = await Post.findOne({ _id: postId })
-            const playlist = await Playist.findOneAndUpdate(
-                { _id: playlistId, user: userId },
-                { $push: { songs: post.song._id } }
-            )
-            res.json(playlist)
-        } catch (error) {
-            res.json(error.message)
-        }
-    },
+    //     try {
+    //         const post = await Post.findOne({ _id: postId })
+    //         const playlist = await Playist.findOneAndUpdate(
+    //             { _id: playlistId, user: userId },
+    //             { $push: { posts: postId } }
+    //         )
+    //         res.json(playlist)
+    //     } catch (error) {
+    //         res.json(error.message)
+    //     }
+    // },
     createPost: async (req, res) => {
         const data = { ...req.body }
         const userId = req.userId
@@ -92,7 +92,7 @@ module.exports = {
                         return res.sendStatus(403);
                     }
                 });
-            Post.updateOne({ _id: postId }, { content: data.content }, function (err, post) {
+            await Post.updateOne({ _id: postId }, { content: data.content }, function (err, post) {
                 if (err) return handleError(err);
                 res.json(post)
             });
@@ -113,7 +113,7 @@ module.exports = {
                         return res.sendStatus(403);
                     }
                 });
-            Post.deleteOne({ _id: postId }, function (err, post) {
+            await Post.deleteOne({ _id: postId }, function (err, post) {
                 if (err) return handleError(err);
                 res.json(post)
             });
