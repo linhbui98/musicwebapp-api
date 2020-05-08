@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Post = require('../models/posts.model');
 const User = require('../models/users.model');
+const Playist = require('../models/playlists.model');
 
 module.exports = {
     findAll: async (req, res) => {
@@ -15,7 +16,7 @@ module.exports = {
                 .populate('comments')
                 .limit(perPage)
                 .skip(perPage * (page - 1))
-              
+
             posts = posts.map(post => {
                 let likes = post.likes.filter(like => {
                     return like.user == userId;
@@ -40,6 +41,22 @@ module.exports = {
                     if (err) return handleError(err);
                     res.json(post)
                 });
+        } catch (error) {
+            res.json(error.message)
+        }
+    },
+    savePostToPlaylist: async (req, res) => {
+        const userId = req.userId
+        const playlistId = req.body.playlistId
+        const postId = req.params.id
+
+        try {
+            const post = await Post.findOne({ _id: postId })
+            const playlist = await Playist.findOneAndUpdate(
+                { _id: playlistId, user: userId },
+                { $push: { songs: post.song._id } }
+            )
+            res.json(playlist)
         } catch (error) {
             res.json(error.message)
         }

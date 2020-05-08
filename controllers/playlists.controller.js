@@ -17,8 +17,11 @@ module.exports = {
     },
     create: async (req, res) => {
         let data = { ...req.body };
+        let userId = req.userId;
         let playList = new Playlist({
             _id: new mongoose.Types.ObjectId(),
+            name: data.name, 
+            user: userId           
         })
         try {
             playList.save(function (err) {

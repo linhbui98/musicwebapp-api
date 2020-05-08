@@ -10,6 +10,8 @@ router.get('/:id', postController.findById);
 router.post('/', postController.createPost);
 // update post
 router.put('/:id', postController.updatePost);
+// save song to playlist
+router.post('/:id/saveToPlaylist', postController.savePostToPlaylist);
 // delete post
 router.delete('/:id', postController.deletePost);
 
