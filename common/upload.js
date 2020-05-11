@@ -1,5 +1,6 @@
 var multer = require('multer');
-const path =require('path')
+var path = require('path');
+
 var storage = multer.diskStorage({
     destination: (req, file, cb) => {
 
@@ -21,8 +22,12 @@ var storage = multer.diskStorage({
         let errorMess = `The file ${file.originalname} is invalid. Only allowed to upload image jpeg or png or mpeg.`;
         return cb(errorMess, null);
       }
-
-      let filename = `${Date.now()}-${file.originalname}`;
+      const fileExtName = path.extname(file.originalname);
+      const randomName = Array(10)
+      .fill(null)
+      .map(() => Math.round(Math.random() * 16).toString(16))
+      .join('');
+      let filename = `${Date.now()}-${randomName}${fileExtName}`;
       cb(null, filename);
 }})
 

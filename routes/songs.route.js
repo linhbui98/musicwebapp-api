@@ -1,5 +1,6 @@
 var express = require('express');
 var songController = require('../controllers/songs.controller');
+const upload = require('../common/upload');
 
 var router = express.Router();
 
@@ -7,9 +8,12 @@ var router = express.Router();
 router.get('/', songController.findAll);
 
 // upload song
-router.post('/upload', songController.uploadSong);
+router.post('/upload', upload.single('file'), songController.uploadSong);
+
+// remove song
+router.delete('/:name/remove', songController.removeSong);
 
 // play song
-router.get('/play', songController.playSong);
+router.get('/:name/play', songController.playSong);
 
 module.exports = router;
