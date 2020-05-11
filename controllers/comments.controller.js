@@ -16,11 +16,15 @@ module.exports = {
     },
     getCommentByPost: async (req, res) => {
         const postId = req.params.postId
+        const perPage = 3
+        const page = req.query.page || 1
         try {
             let comments = await Comment.find({
                 post: postId
             })
             .populate('user')
+            .limit(perPage)
+            .skip(perPage * (page - 1))
             res.json(comments)
         } catch (error) {
             res.json(error.message)

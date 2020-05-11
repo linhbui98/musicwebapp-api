@@ -22,6 +22,9 @@ module.exports = {
                     return like.user == userId;
                 })
                 likes.length === 1 ? post._doc.isLike = true : post._doc.isLike = false
+
+                post._doc.countLike = post.likes.length
+                post._doc.countComment = post.comments.length
                 return post;
             })
             res.json(posts)
