@@ -4,7 +4,7 @@ const User = require('../models/users.model');
 module.exports = {
     findAll: async (req, res) => {
         try {
-            await User.find({ isActive: true })
+            const users = await User.find({ isActive: true })
                 .populate('posts')
                 .populate('likes')
                 .populate('comments')
@@ -12,19 +12,15 @@ module.exports = {
                 // .populate('following')
                 // .populate('followers')
                 // .populate('playlists')
-                .exec(function (err, users) {
-                    if (err) console.log("err", err)
-                    res.json(users)
-                });
+                return res.json(users)
         } catch (error) {
-            // res.status(400).send(error)
             res.json(error.message)
         }
     },
     findById: async (req, res) => {
         const userId = req.params.id
         try {
-            await User.findOne({ _id: userId, isActive: true })
+            const user = await User.findOne({ _id: userId, isActive: true })
                 .populate('posts')
                 .populate('likes')
                 .populate('comments')
@@ -32,12 +28,9 @@ module.exports = {
                 // .populate('following')
                 // .populate('followers')
                 // .populate('playlists')
-                .exec(function (err, users) {
-                    if (err) console.log("err", err)
-                    res.json(users)
-                });
+            return res.json(user)
+
         } catch (error) {
-            // res.status(400).send(error)
             res.json(error.message)
         }
     },
@@ -85,11 +78,12 @@ module.exports = {
         const id = req.userId
         try {
 
-            await User.findOneAndUpdate(
+            const user = await User.findOneAndUpdate(
                 { _id: id },
-                { isActive: false }
+                { isActive: false },
+                { new: true}
             );
-            return res.send("Inactive success");
+            return res.json(user);
 
         } catch (error) {
             res.json(error.message)
@@ -99,11 +93,12 @@ module.exports = {
         const id = req.userId
         try {
 
-            await User.findOneAndUpdate(
+            const user = await User.findOneAndUpdate(
                 { _id: id },
-                { isActive: true }
+                { isActive: true },
+                { new: true}
             );
-            return res.send("Reactive success");
+            return res.json(user);
 
         } catch (error) {
             res.json(error.message)
@@ -112,9 +107,8 @@ module.exports = {
     deleteUserForever: async (req, res) => {
         const id = req.userId
         try {
-
             const user = await User.findByIdAndRemove(id);
-            return res.send("Delete success");
+            return res.json(user)
 
         } catch (error) {
             res.json(error.message)
@@ -125,11 +119,12 @@ module.exports = {
         const data = { ...req.body }
         try {
 
-            await User.findOneAndUpdate(
+            const user = await User.findOneAndUpdate(
                 { _id: id },
-                { avatar: data.avatar }
+                { avatar: data.avatar },
+                { new: true}
             );
-            return res.send("Change avatar success");
+            return res.json(user)
 
         } catch (error) {
             res.json(error.message)

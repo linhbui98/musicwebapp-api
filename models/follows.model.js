@@ -13,6 +13,9 @@ const followSchema = Schema(
       ref: 'Users',
     },
   },
+  {
+    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+  }
 );
 
 module.exports = mongoose.model('Follow', followSchema, 'follows');

@@ -10,6 +10,9 @@ const authorSchema = Schema(
       type: Schema.Types.ObjectId,
       ref: 'Song',
     },
+  },
+  {
+    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
   }
 );
 

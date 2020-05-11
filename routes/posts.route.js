@@ -6,12 +6,12 @@ var router = express.Router();
 router.get('/', postController.findAll);
 // get posts by id
 router.get('/:id', postController.findById);
+// get posts user follow
+router.get('/follow', postController.getFollowedPosts);
 // create post
 router.post('/', postController.createPost);
 // update post
 router.put('/:id', postController.updatePost);
-// save song to playlist
-// router.post('/:id/saveToPlaylist', postController.savePostToPlaylist);
 // delete post
 router.delete('/:id', postController.deletePost);
 

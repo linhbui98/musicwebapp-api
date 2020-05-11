@@ -6,9 +6,8 @@ const User = require('../models/users.model');
 module.exports = {
     findAll: async (req, res) => {
         try {
-            await Like.find({}, function (err, likes) {
-                res.json(likes)
-            });
+            const likes = await Like.find({})
+            return res.json(likes)
         } catch (error) {
             res.json(error.message)
         }
@@ -16,11 +15,11 @@ module.exports = {
     getLikeByPost: async (req, res) => {
         const postId = req.params.postId
         try {
-            let likes = await Like.find({
+            const likes = await Like.find({
                 post: postId
             })
             .populate('user')
-            res.json(likes)
+            return res.json(likes)
         } catch (error) {
             res.json(error.message)
         }
@@ -61,7 +60,7 @@ module.exports = {
         try {
 
             const like = await Like.findOneAndRemove({ user: userId, post: postId })
-            console.log(like)
+            
             // Delete likes from users collection, post collection
             await User.findOneAndUpdate(
                 { _id: userId },
@@ -72,7 +71,7 @@ module.exports = {
                 { $pull: { likes: like._id } }
             );
 
-            res.json(like)
+            return res.json(like)
         } catch (error) {
             res.json(error.message)
         }

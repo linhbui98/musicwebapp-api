@@ -48,14 +48,14 @@ const userSchema = mongoose.Schema({
     },
     playlists: [
         {
-          type: ObjectId,
-          ref: 'Playlist',
+            type: ObjectId,
+            ref: 'Playlist',
         },
     ],
     posts: [
         {
-          type: ObjectId,
-          ref: 'Post',
+            type: ObjectId,
+            ref: 'Post',
         },
     ],
     likes: [
@@ -88,11 +88,14 @@ const userSchema = mongoose.Schema({
             ref: 'Notification',
         },
     ],
-});
+},
+    {
+        timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+    });
 
 
 // Hashes the users password when saving it to DB
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
     const user = this;
 
     // only hash the password if it has been modified (or is new)

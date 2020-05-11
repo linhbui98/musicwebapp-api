@@ -6,14 +6,10 @@ const User = require('../models/users.model');
 module.exports = {
     findAll: async (req, res) => {
         try {
-            await Playlist.find({})
-                .populate('songs')
-                .exec(function (err, playlists) {
-                    if (err) return handleError(err);
-                    res.json(playlists)
-                });
+            const playlists = await Playlist.find({})
+                .populate('posts')
+            return res.json(playlists)
         } catch (error) {
-            // res.status(400).send(error)
             res.json(error.message)
         }
     },
@@ -22,12 +18,11 @@ module.exports = {
         try {
             const playlists = await Playlist.find({ user: userId })
                 .populate('posts')
-                playlists.map(playlist => {
-                    playlist._doc.countSong = playlist.posts.length
+            playlists.map(playlist => {
+                playlist._doc.countSong = playlist.posts.length
             })
-           res.json(playlists)
+            return res.json(playlists)
         } catch (error) {
-            // res.status(400).send(error)
             res.json(error.message)
         }
     },
@@ -40,14 +35,12 @@ module.exports = {
             user: userId
         })
         try {
-            playlist.save(function (err) {
-                if (err) throw (err)
-                res.json(playlist);
-            });
+            const playlist = await playlist.save()
             await User.findOneAndUpdate(
                 { user: userId },
                 { $push: { playlists: playlist._id } }
             )
+            return res.json(playlist);
         } catch (error) {
             res.json(error.message)
         }
@@ -63,7 +56,10 @@ module.exports = {
                 { name: data.name },
                 { new: true }
             )
-            res.json(playlist)
+            if(!playlist){
+                return res.json('You dont have this playlist or playlist not exist!')
+            }
+            return res.json(playlist)
         } catch (error) {
             res.json(error.message)
         }
@@ -81,7 +77,10 @@ module.exports = {
                 { user: userId },
                 { $pull: { playlists: playlist._id } }
             )
-            res.json(playlist)
+            if(!playlist){
+                return res.json('You dont have this playlist or playlist not exist!')
+            }
+            return res.json(playlist)
         } catch (error) {
             res.json(error.message)
         }
@@ -96,7 +95,7 @@ module.exports = {
                 { $push: { posts: postId } },
                 { new: true }
             )
-            res.json(playlist)
+            return res.json(playlist)
         } catch (error) {
             res.json(error.message)
         }
@@ -111,7 +110,7 @@ module.exports = {
                 { $pull: { posts: postId } },
                 { new: true }
             )
-            res.json(playlist)
+            return res.json(playlist)
         } catch (error) {
             res.json(error.message)
         }

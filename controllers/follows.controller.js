@@ -5,9 +5,8 @@ const User = require('../models/users.model');
 module.exports = {
   findAll: async (req, res) => {
     try {
-      await Follow.find({}, function (err, follows) {
-        res.json(follows)
-      });
+      const follows = await Follow.find({})
+      return res.json(follows)
     } catch (error) {
       // res.status(400).send(error)
       res.json(error.message)
@@ -23,7 +22,6 @@ module.exports = {
     })
 
     try {
-
       await follow.save()
 
       // Push follower/following to user collection
@@ -44,7 +42,6 @@ module.exports = {
   deleteFollow: async (req, res) => {
     const id = req.params.id
     try {
-
       const follow = await Follow.findByIdAndRemove(id);
 
       // Delete follow from users collection

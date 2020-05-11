@@ -27,6 +27,9 @@ const postSchema = Schema(
         ref: 'Comment',
       },
     ],
+  },
+  {
+    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
   }
 );
 

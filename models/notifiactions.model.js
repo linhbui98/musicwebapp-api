@@ -31,6 +31,9 @@
 //       default: false,
 //     },
 //   },
+    // {
+    //   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+    // }
 // );
 
 // export default mongoose.model('Notification', notificationSchema, 'notifications');

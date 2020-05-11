@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Post = require('../models/posts.model');
 const User = require('../models/users.model');
 const Playist = require('../models/playlists.model');
+const Follow = require('../models/follows.model');
 
 module.exports = {
     findAll: async (req, res) => {
@@ -27,7 +28,7 @@ module.exports = {
                 post._doc.countComment = post.comments.length
                 return post;
             })
-            res.json(posts)
+            return res.json(posts)
         } catch (error) {
             res.json(error.message)
         }
@@ -35,35 +36,60 @@ module.exports = {
     findById: async (req, res) => {
         const id = req.params.id
         try {
-            await Post.find({ _id: id })
+            const post = await Post.find({ _id: id })
                 .populate('song')
                 .populate('user')
                 .populate('likes')
                 .populate('comments')
-                .exec(function (err, post) {
-                    if (err) return handleError(err);
-                    res.json(post)
-                });
+            return res.json(post)
         } catch (error) {
             res.json(error.message)
         }
     },
-    // savePostToPlaylist: async (req, res) => {
-    //     const userId = req.userId
-    //     const playlistId = req.body.playlistId
-    //     const postId = req.params.id
+    getFollowedPosts: async (req, res) => {
+        const userId = req.userId
+        // Find user ids, that current user follows
+        const userFollowing = [];
+        const follow = await Follow.find({ user: userId }, { _id: 0 }).select(
+            'follower'
+        );
+        console.log(follow)
+        // follow.map(f => userFollowing.push(f.user));
 
-    //     try {
-    //         const post = await Post.findOne({ _id: postId })
-    //         const playlist = await Playist.findOneAndUpdate(
-    //             { _id: playlistId, user: userId },
-    //             { $push: { posts: postId } }
-    //         )
-    //         res.json(playlist)
-    //     } catch (error) {
-    //         res.json(error.message)
-    //     }
-    // },
+        // // Find user posts and followed posts by using userFollowing ids array
+        // const query = {
+        //     $or: [{ author: { $in: userFollowing } }, { author: userId }],
+        // };
+        // const followedPostsCount = await Post.find(query).countDocuments();
+        // const followedPosts = await Post.find(query)
+        //     .populate({
+        //         path: 'author',
+        //         populate: [
+        //             { path: 'following' },
+        //             { path: 'followers' },
+        //             // {
+        //             //     path: 'notifications',
+        //             //     populate: [
+        //             //         { path: 'author' },
+        //             //         { path: 'follow' },
+        //             //         { path: 'like' },
+        //             //         { path: 'comment' },
+        //             //     ],
+        //             // },
+        //         ],
+        //     })
+        //     .populate('likes')
+        //     .populate({
+        //         path: 'comments',
+        //         options: { sort: { createdAt: 'desc' } },
+        //         populate: { path: 'author' },
+        //     })
+        //     .skip(skip)
+        //     .limit(limit)
+        //     .sort({ createdAt: 'desc' });
+
+        // return { posts: followedPosts, count: followedPostsCount };
+    },
     createPost: async (req, res) => {
         const data = { ...req.body }
         const userId = req.userId
@@ -73,10 +99,8 @@ module.exports = {
             user: userId
         })
         try {
-            await post.save(function (err, post) {
-                if (err) return handleError(err);
-                res.json(post);
-            });
+            await post.save()
+            return res.json(post);
         } catch (error) {
             res.json(error.message)
         }
@@ -87,18 +111,15 @@ module.exports = {
         const data = { ...req.body }
 
         try {
-            await Post.findOne({ _id: postId })
-                .populate('user')
-                .exec(function (err, post) {
-                    if (err) return handleError(err);
-                    if (userId.toString() !== post.user._id.toString()) {
-                        return res.sendStatus(403);
-                    }
-                });
-            await Post.updateOne({ _id: postId }, { content: data.content }, function (err, post) {
-                if (err) return handleError(err);
-                res.json(post)
-            });
+            const post = await Post.findOneAndUpdate(
+                { user: userId, _id: postId },
+                { content: data.content },
+                { new: true }
+            );
+            if(!post){
+                return res.json('You dont have this post or post not exist!')
+            }
+            return res.json(post)
         } catch (error) {
             res.json(error.message)
         }
@@ -108,18 +129,13 @@ module.exports = {
         const postId = req.params.id
 
         try {
-            await Post.findOne({ _id: postId })
-                .populate('user')
-                .exec(function (err, post) {
-                    if (err) return handleError(err);
-                    if (userId.toString() !== post.user._id.toString()) {
-                        return res.sendStatus(403);
-                    }
-                });
-            await Post.deleteOne({ _id: postId }, function (err, post) {
-                if (err) return handleError(err);
-                res.json(post)
-            });
+            const post = await Post.findOneAndDelete(
+                { user: userId, _id: postId }
+            );
+            if(!post){
+                return res.json('You dont have this post or post not exist!')
+            }
+            return res.json(post)
         } catch (error) {
             res.json(error.message)
         }

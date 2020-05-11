@@ -6,11 +6,9 @@ const User = require('../models/users.model');
 module.exports = {
     findAll: async (req, res) => {
         try {
-            await Comment.find({}, function (err, comments) {
-                res.json(comments)
-            });
+            const comments = await Comment.find({})
+            return res.json(comments)
         } catch (error) {
-            // res.status(400).send(error)
             res.json(error.message)
         }
     },
@@ -19,13 +17,13 @@ module.exports = {
         const perPage = 3
         const page = req.query.page || 1
         try {
-            let comments = await Comment.find({
+            const comments = await Comment.find({
                 post: postId
             })
-            .populate('user')
-            .limit(perPage)
-            .skip(perPage * (page - 1))
-            res.json(comments)
+                .populate('user')
+                .limit(perPage)
+                .skip(perPage * (page - 1))
+            return res.json(comments)
         } catch (error) {
             res.json(error.message)
         }
@@ -62,21 +60,13 @@ module.exports = {
         }
 
     },
-
     deleteComment: async (req, res) => {
         const id = req.params.id
         const userId = req.userId
         try {
-
-            await Comment.findOne({ _id: id })
-                .exec(function (err, comment) {
-                    if (err) return handleError(err);
-                    if (userId.toString() !== comment.user.toString()) {
-                        return res.sendStatus(403);
-                    }
-                });
-
-            const comment = await Comment.remove({ _id: id })
+            const comment = await Comment.findOneAndDelete(
+                { user: userId, _id: id }
+            );
 
             // Delete comment from users collection, post collection
             await User.findOneAndUpdate(
@@ -87,7 +77,9 @@ module.exports = {
                 { _id: comment.post },
                 { $pull: { comments: comment._id } }
             );
-
+            if (!comment) {
+                return res.json('You dont have this comment or comment not exist!')
+            }
             return res.json(comment);
         } catch (error) {
             res.json(error.message)
@@ -99,16 +91,15 @@ module.exports = {
         const data = { ...req.body }
 
         try {
-            await Comment.findOne({ _id: id })
-                .exec(function (err, comment) {
-                    if (err) return handleError(err);
-                    if (userId.toString() !== comment.user.toString()) {
-                        return res.sendStatus(403);
-                    }
-                });
-            const comment = await Comment.updateOne({ _id: id }, { content: data.content })
-
-            res.json(comment)
+            const comment = await Comment.findOneAndUpdate(
+                { _id: id },
+                { content: data.content },
+                { new: true }
+            );
+            if (!comment) {
+                return res.json('You dont have this comment or comment not exist!')
+            }
+            return res.json(comment)
         } catch (error) {
             res.json(error.message)
         }

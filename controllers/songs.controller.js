@@ -7,9 +7,8 @@ const fs = require('fs');
 module.exports = {
     findAll: async (req, res) => {
         try {
-            await Song.find({}, function (err, songs) {
-                res.json(songs)
-            });
+            const songs = await Song.find({})
+            return res.json(songs)
         } catch (error) {
             res.json(error.message)
         }
@@ -49,7 +48,7 @@ module.exports = {
         const songName = req.params.name
         try {
             fs.unlinkSync(path.join(process.cwd(), 'uploads/audios', songName));
-            res.send('success')
+            return res.send('success')
         } catch (err) {
             res.json(err)
         }
