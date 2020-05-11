@@ -20,12 +20,12 @@ module.exports = {
     findAllForUser: async (req, res) => {
         const userId = req.userId;
         try {
-            await Playlist.find({ user: userId })
-                .populate('songs')
-                .exec(function (err, playlists) {
-                    if (err) return handleError(err);
-                    res.json(playlists)
-                });
+            const playlists = await Playlist.find({ user: userId })
+                .populate('posts')
+                playlists.map(playlist => {
+                    playlist._doc.countSong = playlist.posts.length
+            })
+           res.json(playlists)
         } catch (error) {
             // res.status(400).send(error)
             res.json(error.message)
@@ -46,7 +46,7 @@ module.exports = {
             });
             await User.findOneAndUpdate(
                 { user: userId },
-                { $push: { playlists: playlist._id} }
+                { $push: { playlists: playlist._id } }
             )
         } catch (error) {
             res.json(error.message)
@@ -61,7 +61,7 @@ module.exports = {
             const playlist = await Playlist.findOneAndUpdate(
                 { _id: playlistId, user: userId },
                 { name: data.name },
-                { new : true }
+                { new: true }
             )
             res.json(playlist)
         } catch (error) {
@@ -79,7 +79,7 @@ module.exports = {
             )
             await User.findOneAndUpdate(
                 { user: userId },
-                { $pull: { playlists: playlist._id} }
+                { $pull: { playlists: playlist._id } }
             )
             res.json(playlist)
         } catch (error) {
@@ -94,7 +94,7 @@ module.exports = {
             const playlist = await Playlist.findOneAndUpdate(
                 { _id: playlistId, user: userId },
                 { $push: { posts: postId } },
-                { new : true } 
+                { new: true }
             )
             res.json(playlist)
         } catch (error) {
@@ -109,7 +109,7 @@ module.exports = {
             const playlist = await Playlist.findOneAndUpdate(
                 { _id: playlistId, user: userId },
                 { $pull: { posts: postId } },
-                { new : true } 
+                { new: true }
             )
             res.json(playlist)
         } catch (error) {
