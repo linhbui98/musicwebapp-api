@@ -17,7 +17,10 @@ module.exports = {
         const userId = req.userId;
         try {
             const playlists = await Playlist.find({ user: userId })
-                .populate('posts')
+                .populate({
+                    path: 'posts',
+                    populate: ['song']
+                })
             playlists.map(playlist => {
                 playlist._doc.countSong = playlist.posts.length
             })
@@ -56,7 +59,7 @@ module.exports = {
                 { name: data.name },
                 { new: true }
             )
-            if(!playlist){
+            if (!playlist) {
                 return res.json('You dont have this playlist or playlist not exist!')
             }
             return res.json(playlist)
@@ -77,7 +80,7 @@ module.exports = {
                 { user: userId },
                 { $pull: { playlists: playlist._id } }
             )
-            if(!playlist){
+            if (!playlist) {
                 return res.json('You dont have this playlist or playlist not exist!')
             }
             return res.json(playlist)
