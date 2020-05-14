@@ -96,6 +96,7 @@ module.exports = {
         const post = new Post({
             _id: new mongoose.Types.ObjectId(),
             content: data.content,
+            song: data.song,
             user: userId
         })
         try {
