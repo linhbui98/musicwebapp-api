@@ -11,7 +11,6 @@ module.exports = {
         const page = req.query.page || 1
         try {
             let posts = await Post.find({})
-                .populate('song')
                 .populate('user')
                 .populate('likes')
                 .populate('comments')

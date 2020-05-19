@@ -37,7 +37,7 @@ module.exports = {
             user: userId
         })
         try {
-            const playlist = await playlist.save()
+            await playlist.save()
             await User.findOneAndUpdate(
                 { user: userId },
                 { $push: { playlists: playlist._id } }
@@ -69,7 +69,6 @@ module.exports = {
     delete: async (req, res) => {
         const userId = req.userId
         const playlistId = req.params.id
-        const data = { ...req.body }
 
         try {
             const playlist = await Playlist.findOneAndRemove(
