@@ -14,6 +14,6 @@ router.post('/upload', upload.single('file'), songController.uploadSong);
 router.delete('/:name', songController.removeSong);
 
 // play song
-router.get('/:name/play', songController.playSong);
+router.get('/:name', songController.playSong);
 
 module.exports = router;

@@ -96,8 +96,9 @@ module.exports = {
         const userId = req.userId
         const post = new Post({
             _id: new mongoose.Types.ObjectId(),
-            content: data.content,
-            song: data.song,
+            src: data.src,
+            name: data.name,
+            description: data.description,
             user: userId
         })
         try {
