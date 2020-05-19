@@ -13,36 +13,8 @@ module.exports = {
             res.json(error.message)
         }
     },
-    uploadSong: async (req, res) => {
-
-        await upload.single('file')(req, res, (error) => {
-            if (error) {
-                return res.send(`Error when trying to upload: ${error}`);
-            }
-            console.log('linh')
-            // res.sendFile(path.join(process.cwd(), 'uploads', req.file.filename));
-            // res.send(req.file)
-        });
-        console.log('huyy')
-        const userId = req.userId
-        const name = req.file.originalname
-        const source = req.file.filename
-
-        const song = new Song({
-            _id: new mongoose.Types.ObjectId(),
-            name: name,
-            source: source,
-            user: userId
-        })
-
-        try {
-            await song.save(function (err, song) {
-                if (err) console.log(err);
-                res.json(song);
-            });
-        } catch (error) {
-            res.json(error.message)
-        }
+    uploadSong: (req, res) => {
+        res.send(req.file)
     },
     removeSong: async (req, res) => {
         const songName = req.params.name

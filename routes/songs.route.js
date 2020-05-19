@@ -11,7 +11,7 @@ router.get('/', songController.findAll);
 router.post('/upload', upload.single('file'), songController.uploadSong);
 
 // remove song
-router.delete('/:name/remove', songController.removeSong);
+router.delete('/:name', songController.removeSong);
 
 // play song
 router.get('/:name/play', songController.playSong);

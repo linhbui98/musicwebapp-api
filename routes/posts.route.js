@@ -5,7 +5,7 @@ var router = express.Router();
 // get list posts
 router.get('/', postController.findAll);
 // get posts by id
-router.get('/:id', postController.findById);
+// router.get('/:id', postController.findById);
 // get posts user follow
 router.get('/follow', postController.getFollowedPosts);
 // create post

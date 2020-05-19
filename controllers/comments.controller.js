@@ -23,6 +23,7 @@ module.exports = {
                 .populate('user')
                 .limit(perPage)
                 .skip(perPage * (page - 1))
+                .sort({ createdAt: 'desc' });
             return res.json(comments)
         } catch (error) {
             res.json(error.message)

@@ -40,6 +40,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(logger('dev'))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static(path.join(__dirname, 'uploads')))
 
 app.get('/', indexRoute)
 app.post('/login', loginHandle)

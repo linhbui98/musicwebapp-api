@@ -5,12 +5,10 @@ const Schema = mongoose.Schema;
 
 const postSchema = Schema(
   {
-    content: String,
     isDelete: Boolean,
-    song: {
-      type: Schema.Types.ObjectId,
-      ref: 'Song',
-    },
+    src: String,
+    name: String,
+    description: String,
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',

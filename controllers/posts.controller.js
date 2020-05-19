@@ -50,45 +50,46 @@ module.exports = {
         const userId = req.userId
         // Find user ids, that current user follows
         const userFollowing = [];
-        const follow = await Follow.find({ user: userId }, { _id: 0 }).select(
-            'follower'
-        );
-        console.log(follow)
-        // follow.map(f => userFollowing.push(f.user));
+        try {
+            const follow = await Follow.find({ user: userId }, { _id: 0 }).select(
+                'follower'
+            );
+            follow.map(f => userFollowing.push(f.user));
 
-        // // Find user posts and followed posts by using userFollowing ids array
-        // const query = {
-        //     $or: [{ author: { $in: userFollowing } }, { author: userId }],
-        // };
-        // const followedPostsCount = await Post.find(query).countDocuments();
-        // const followedPosts = await Post.find(query)
-        //     .populate({
-        //         path: 'author',
-        //         populate: [
-        //             { path: 'following' },
-        //             { path: 'followers' },
-        //             // {
-        //             //     path: 'notifications',
-        //             //     populate: [
-        //             //         { path: 'author' },
-        //             //         { path: 'follow' },
-        //             //         { path: 'like' },
-        //             //         { path: 'comment' },
-        //             //     ],
-        //             // },
-        //         ],
-        //     })
-        //     .populate('likes')
-        //     .populate({
-        //         path: 'comments',
-        //         options: { sort: { createdAt: 'desc' } },
-        //         populate: { path: 'author' },
-        //     })
-        //     .skip(skip)
-        //     .limit(limit)
-        //     .sort({ createdAt: 'desc' });
+            // // Find user posts and followed posts by using userFollowing ids array
+            const query = {
+                $or: [{ author: { $in: userFollowing } }, { author: userId }],
+            };
+            const followedPostsCount = await Post.find(query).countDocuments();
+            const followedPosts = await Post.find(query)
+                .populate({
+                    path: 'user',
+                    populate: [
+                        { path: 'following' },
+                        { path: 'followers' },
+                        // {
+                        //     path: 'notifications',
+                        //     populate: [
+                        //         { path: 'author' },
+                        //         { path: 'follow' },
+                        //         { path: 'like' },
+                        //         { path: 'comment' },
+                        //     ],
+                        // },
+                    ],
+                })
+                .populate('likes')
+                .populate({
+                    path: 'comments',
+                    options: { sort: { createdAt: 'desc' } },
+                    populate: { path: 'user' },
+                })
+                .sort({ createdAt: 'desc' });
+            return res.json({ posts: followedPosts, count: followedPostsCount });
+        } catch (err) {
+            res.json(err.message)
+        }
 
-        // return { posts: followedPosts, count: followedPostsCount };
     },
     createPost: async (req, res) => {
         const data = { ...req.body }
@@ -117,7 +118,7 @@ module.exports = {
                 { content: data.content },
                 { new: true }
             );
-            if(!post){
+            if (!post) {
                 return res.json('You dont have this post or post not exist!')
             }
             return res.json(post)
@@ -133,7 +134,7 @@ module.exports = {
             const post = await Post.findOneAndDelete(
                 { user: userId, _id: postId }
             );
-            if(!post){
+            if (!post) {
                 return res.json('You dont have this post or post not exist!')
             }
             return res.json(post)
