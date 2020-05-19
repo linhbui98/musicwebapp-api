@@ -19,7 +19,6 @@ module.exports = {
             const playlists = await Playlist.find({ user: userId })
                 .populate({
                     path: 'posts',
-                    populate: ['song']
                 })
             playlists.map(playlist => {
                 playlist._doc.countSong = playlist.posts.length

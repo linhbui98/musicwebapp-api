@@ -37,7 +37,6 @@ module.exports = {
         const id = req.params.id
         try {
             const post = await Post.find({ _id: id })
-                .populate('song')
                 .populate('user')
                 .populate('likes')
                 .populate('comments')
