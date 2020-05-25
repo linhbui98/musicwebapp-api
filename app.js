@@ -12,6 +12,9 @@ var mongoose = require('mongoose')
 var dbUrl = `mongodb://${config.host}:${config.port}/${config.database}`
 // auth
 var loginHandle = require('./auth/login').loginHandle
+var signupHandle = require('./auth/signup').signupHandle
+var resendMailVerify = require('./auth/resend').resendMailVerify
+var verifyHandle = require('./auth/verify').verifyHandle
 var auth = require('./auth/auth')
 
 console.log('dbUrl', dbUrl)
@@ -44,6 +47,9 @@ app.use(express.static(path.join(__dirname, 'uploads')))
 
 app.get('/', indexRoute)
 app.post('/login', loginHandle)
+app.post('/signup', signupHandle)
+app.post('/resend', resendMailVerify)
+app.get('/verify', verifyHandle)
 app.use('/api', auth, api)
 // app.use('/api', api)
 

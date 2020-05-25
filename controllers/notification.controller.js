@@ -8,10 +8,6 @@ module.exports = {
         .populate('posts')
         .populate('likes')
         .populate('comments')
-      // .populate('notifications')
-      // .populate('following')
-      // .populate('followers')
-      // .populate('playlists')
       return res.json(users)
     } catch (error) {
       res.json(error.message)

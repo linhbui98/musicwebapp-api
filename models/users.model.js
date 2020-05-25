@@ -44,7 +44,7 @@ const userSchema = mongoose.Schema({
     },
     isActive: {
         type: Boolean,
-        required: true,
+        default: false
     },
     playlists: [
         {
