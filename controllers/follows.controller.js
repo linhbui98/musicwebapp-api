@@ -13,7 +13,7 @@ module.exports = {
     }
   },
   getUserFollows: async (req, res) => {
-    const userId = req.userId
+    const userId = req.params.userId
     try {
       const follows = await Follow.find({ user: userId })
         .populate('user')

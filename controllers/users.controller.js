@@ -17,17 +17,17 @@ module.exports = {
             res.json(error.message)
         }
     },
-    findById: async (req, res) => {
-        const userId = req.params.id
+    findByUsername: async (req, res) => {
+        const username = req.params.username
         try {
-            const user = await User.findOne({ _id: userId, isActive: true })
+            const user = await User.findOne({ username: username, isActive: true })
                 .populate('posts')
                 .populate('likes')
                 .populate('comments')
                 // .populate('notifications')
-                // .populate('following')
-                // .populate('followers')
-                // .populate('playlists')
+                .populate('following')
+                .populate('followers')
+                .populate('playlists')
             return res.json(user)
 
         } catch (error) {

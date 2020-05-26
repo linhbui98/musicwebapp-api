@@ -5,7 +5,7 @@ const router = require('express').Router()
 // get list users
 router.get('/', userController.findAll);
 // get user by id
-router.get('/:id', userController.findById);
+router.get('/:username', userController.findByUsername);
 // get profile
 router.get('/profile', userController.getProfile);
 // create user
