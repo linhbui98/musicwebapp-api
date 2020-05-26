@@ -44,6 +44,44 @@ module.exports = {
             res.json(error.message)
         }
     },
+    getUserPosts: async (req, res) => {
+        const userId = req.userId
+        const perPage = 5
+        const page = req.query.page || 1
+        try {
+            const posts = await Post.find({ user: userId })
+                .populate('user')
+                .populate('likes')
+                .populate('comments')
+                .limit(perPage)
+                .skip(perPage * (page - 1))
+            return res.json(posts)
+        } catch (error) {
+            res.json(error.message)
+        }
+    },
+    getUserLikePosts: async (req, res) => {
+        const userId = req.userId
+        const perPage = 5
+        const page = req.query.page || 1
+        try {
+            let posts = await Post.find({})
+                .populate('user')
+                .populate('likes')
+                .populate('comments')
+                .limit(perPage)
+                .skip(perPage * (page - 1))
+            posts = posts.filter(post => {
+                let likes = post.likes.filter(like => {
+                    return like.user == userId;
+                })
+                return likes.length;
+            })
+            return res.json(posts)
+        } catch (error) {
+            res.json(error.message)
+        }
+    },
     getFollowedPosts: async (req, res) => {
         const userId = req.userId
         // Find user ids, that current user follows

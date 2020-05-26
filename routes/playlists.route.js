@@ -17,7 +17,7 @@ router.put('/:id', playistController.updateName);
 // delete playlist
 router.delete('/:id', playistController.delete);
 
-// delete post from playlist
+// add post to playlist
 router.put('/:id/addPostToPlaylist', playistController.addPostToPlaylist);
 
 // delete post from playlist
