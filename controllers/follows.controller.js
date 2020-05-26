@@ -12,6 +12,17 @@ module.exports = {
       res.json(error.message)
     }
   },
+  getUserFollows: async (req, res) => {
+    const userId = req.userId
+    try {
+      const follows = await Follow.find({ user: userId })
+        .populate('user')
+        .populate('follower')
+      return res.json(follows)
+    } catch (error) {
+      res.json(error.message)
+    }
+  },
   createFollow: async (req, res) => {
     const data = { ...req.body }
     const userId = req.userId

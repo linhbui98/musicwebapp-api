@@ -5,6 +5,9 @@ var router = express.Router();
 // get list follows
 router.get('/', followController.findAll);
 
+// get list user follows
+router.get('/follower', followController.getUserFollows);
+
 // create follows
 router.post('/', followController.createFollow);
 

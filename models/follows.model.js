@@ -6,11 +6,11 @@ const followSchema = Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'Users',
+      ref: 'User',
     },
     follower: {
       type: Schema.Types.ObjectId,
-      ref: 'Users',
+      ref: 'User',
     },
   },
   {
