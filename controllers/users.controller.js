@@ -8,26 +8,36 @@ module.exports = {
                 .populate('posts')
                 .populate('likes')
                 .populate('comments')
-                // .populate('notifications')
-                // .populate('following')
-                // .populate('followers')
-                // .populate('playlists')
+                .populate('following')
+                .populate('followers')
+                .populate('playlists')
+                 // .populate('notifications')
                 return res.json(users)
         } catch (error) {
             res.json(error.message)
         }
     },
     findByUsername: async (req, res) => {
+        const userId = req.userId
         const username = req.params.username
         try {
-            const user = await User.findOne({ username: username, isActive: true })
+            let user = await User.findOne({ username: username, isActive: true })
                 .populate('posts')
                 .populate('likes')
                 .populate('comments')
-                // .populate('notifications')
                 .populate('following')
                 .populate('followers')
                 .populate('playlists')
+                 // .populate('notifications')
+            const condition = user.followers.find(user => {
+                return user.user == userId
+            })
+            console.log(userId)
+            if(condition){
+                user._doc.isFollow = true
+            }else {
+                user._doc.isFollow = false
+            }
             return res.json(user)
 
         } catch (error) {
