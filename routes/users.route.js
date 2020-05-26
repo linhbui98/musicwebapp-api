@@ -1,19 +1,15 @@
 const userController = require('../controllers/users.controller');
+const upload = require('../common/upload');
 const router = require('express').Router()
-
 
 // get list users
 router.get('/', userController.findAll);
-// get user by id
+// get user by username
 router.get('/:username', userController.findByUsername);
-// get profile
-router.get('/profile', userController.getProfile);
-// create user
-// router.post('/', userController.createUser);
 // update user
 router.put('/', userController.updateUser);
 // change avatar
-router.put('/changeAvatar', userController.changeAvatar);
+router.post('/changeAvatar', upload.single('img'), userController.changeAvatar);
 // delete user
 router.put('/inactive', userController.inactiveUser);
 // reactive user

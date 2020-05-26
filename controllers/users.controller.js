@@ -32,7 +32,6 @@ module.exports = {
             const condition = user.followers.find(user => {
                 return user.user == userId
             })
-            console.log(userId)
             if(condition){
                 user._doc.isFollow = true
             }else {
@@ -44,46 +43,6 @@ module.exports = {
             res.json(error.message)
         }
     },
-    getProfile: async (req, res) => {
-        const userId = req.userId
-        console.log(userId)
-        // try {
-        //     await User.findOne({ _id: userId, isActive: true })
-        //     .exec(function (err, users) {
-        //         if (err) console.log("err", err)
-        //         res.json(users)
-        //     });
-        // } catch (error) {
-        //     res.json(error.message)
-        // }
-    },
-    // createUser: async (req, res) => {
-    //     const data = { ...req.body }
-    //     const user = new User({
-    //         _id: new mongoose.Types.ObjectId(),
-    //         username: data.username,
-    //         password: data.password,
-    //         email: data.email,
-    //         isActive: true,
-    //         fullName: data.fullName,
-    //         playlists: [],
-    //         posts: [],
-    //         likes: [],
-    //         comments: [],
-    //         followers: [],
-    //         following: [],
-    //         notifications: []
-    //     })
-    //     // console.log("user", user)
-    //     try {
-    //         user.save(function (err, user) {
-    //             if (err) throw (err)
-    //             res.json(user);
-    //         });
-    //     } catch (error) {
-    //         res.json(error.message)
-    //     }
-    // },
     inactiveUser: async (req, res) => {
         const id = req.userId
         try {
@@ -126,12 +85,12 @@ module.exports = {
     },
     changeAvatar: async (req, res) => {
         const id = req.userId
-        const data = { ...req.body }
+        const data = { ...req.file }
         try {
 
             const user = await User.findOneAndUpdate(
                 { _id: id },
-                { avatar: data.avatar },
+                { avatar: data.filename },
                 { new: true}
             );
             return res.json(user)
