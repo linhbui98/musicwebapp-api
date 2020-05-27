@@ -9,7 +9,7 @@ router.get('/', postController.findAll);
 // get posts user follow
 router.get('/follow', postController.getFollowedPosts);
 // get posts by user post
-router.get('/:userId', postController.getUserPosts);
+router.post('/:userId', postController.getUserPosts);
 // get posts by user like
 router.get('/like', postController.getUserLikePosts);
 // create post

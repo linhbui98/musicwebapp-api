@@ -64,6 +64,7 @@ module.exports = {
         const userId = req.userId
         const perPage = 5
         const page = req.query.page || 1
+        console.log(userId)
         try {
             let posts = await Post.find({})
                 .populate('user')
