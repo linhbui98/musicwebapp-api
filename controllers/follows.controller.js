@@ -23,6 +23,17 @@ module.exports = {
       res.json(error.message)
     }
   },
+  getFollowerOfUser: async (req, res) => {
+    const userId = req.params.userId
+    try {
+      const follows = await Follow.find({ follower: userId })
+        .populate('user')
+        .populate('follower')
+      return res.json(follows)
+    } catch (error) {
+      res.json(error.message)
+    }
+  },
   createFollow: async (req, res) => {
     const data = { ...req.body }
     const userId = req.userId
