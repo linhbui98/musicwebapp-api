@@ -152,7 +152,7 @@ module.exports = {
         try {
             const post = await Post.findOneAndUpdate(
                 { user: userId, _id: postId },
-                { content: data.content },
+                { description: data.description },
                 { new: true }
             );
             if (!post) {
