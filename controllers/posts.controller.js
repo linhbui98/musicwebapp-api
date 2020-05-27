@@ -45,7 +45,7 @@ module.exports = {
         }
     },
     getUserPosts: async (req, res) => {
-        const userId = req.userId
+        const userId = req.params.userId
         const perPage = 5
         const page = req.query.page || 1
         try {

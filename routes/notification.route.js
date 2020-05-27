@@ -5,4 +5,7 @@ var router = express.Router();
 // get list notification for user
 router.get('/', notificationController.findAllForUser);
 
+// create notification
+router.post('/', notificationController.createNotification);
+
 module.exports = router;

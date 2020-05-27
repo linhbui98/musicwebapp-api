@@ -15,18 +15,19 @@ module.exports = {
   },
   createNotification: async (req, res) => {
     const userId = req.userId
+    const { authorId, postId }= req.body
     try {
         let newNotification = await new Notification({
+          _id: new mongoose.Types.ObjectId(),
           author: authorId,
           user: userId,
           post: postId,
-          [notificationType.toLowerCase()]: notificationTypeId,
         }).save();
 
         // Push notification to user collection
         await User.findOneAndUpdate(
           { _id: userId },
-          { $push: { notifications: newNotification.id } }
+          { $push: { notifications: newNotification._id } }
         );
 
         // Publish notification created event
@@ -36,12 +37,8 @@ module.exports = {
           .populate({ path: 'comment', populate: { path: 'post' } })
           .populate({ path: 'like', populate: { path: 'post' } })
           .execPopulate();
-        pubSub.publish(NOTIFICATION_CREATED_OR_DELETED, {
-          notificationCreatedOrDeleted: {
-            operation: 'CREATE',
-            notification: newNotification,
-          },
-        });
+
+        return newNotification;
       } catch (err) {
         res.json(err.message)
     }
