@@ -38,6 +38,16 @@ module.exports = {
   createFollow: async (req, res) => {
     const data = { ...req.body }
     const userId = req.userId
+
+    const isFollow = await Follow.findOne({
+      user: userId,
+      follower: data.followerId
+    })
+    
+    if(isFollow){
+      return res.json({ message: 'You are followed this user!' })
+    }
+    
     const follow = new Follow({
       _id: new mongoose.Types.ObjectId(),
       follower: data.followerId,
