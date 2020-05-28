@@ -49,12 +49,22 @@ module.exports = {
         const perPage = 5
         const page = req.query.page || 1
         try {
-            const posts = await Post.find({ user: userId })
+            let posts = await Post.find({ user: userId })
                 .populate('user')
                 .populate('likes')
                 .populate('comments')
                 .limit(perPage)
                 .skip(perPage * (page - 1))
+            posts = posts.map(post => {
+                let likes = post.likes.filter(like => {
+                    return like.user == userId;
+                })
+                likes.length === 1 ? post._doc.isLike = true : post._doc.isLike = false
+
+                post._doc.countLike = post.likes.length
+                post._doc.countComment = post.comments.length
+                return post;
+            })
             return res.json(posts)
         } catch (error) {
             res.json(error.message)
@@ -76,6 +86,16 @@ module.exports = {
                     return like.user == userId;
                 })
                 return likes.length;
+            })
+            posts = posts.map(post => {
+                let likes = post.likes.filter(like => {
+                    return like.user == userId;
+                })
+                likes.length === 1 ? post._doc.isLike = true : post._doc.isLike = false
+
+                post._doc.countLike = post.likes.length
+                post._doc.countComment = post.comments.length
+                return post;
             })
             return res.json(posts)
         } catch (error) {
@@ -121,6 +141,16 @@ module.exports = {
                     populate: { path: 'user' },
                 })
                 .sort({ createdAt: 'desc' });
+            posts = posts.map(post => {
+                let likes = post.likes.filter(like => {
+                    return like.user == userId;
+                })
+                likes.length === 1 ? post._doc.isLike = true : post._doc.isLike = false
+
+                post._doc.countLike = post.likes.length
+                post._doc.countComment = post.comments.length
+                return post;
+            })
             return res.json({ posts: followedPosts, count: followedPostsCount });
         } catch (err) {
             res.json(err.message)
