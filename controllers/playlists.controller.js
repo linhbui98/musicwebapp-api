@@ -42,7 +42,7 @@ module.exports = {
         try {
             await playlist.save()
             await User.findOneAndUpdate(
-                { user: userId },
+                { _id: userId },
                 { $push: { playlists: playlist._id } }
             )
             return res.json(playlist);
@@ -78,7 +78,7 @@ module.exports = {
                 { _id: playlistId, user: userId }
             )
             await User.findOneAndUpdate(
-                { user: userId },
+                { _id: userId },
                 { $pull: { playlists: playlist._id } }
             )
             if (!playlist) {
