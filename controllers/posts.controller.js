@@ -107,17 +107,16 @@ module.exports = {
         // Find user ids, that current user follows
         const userFollowing = [];
         try {
-            const follow = await Follow.find({ user: userId }, { _id: 0 }).select(
+            const follows = await Follow.find({ user: userId }, { _id: 0 }).select(
                 'follower'
             );
-            follow.map(f => userFollowing.push(f.user));
-
-            // // Find user posts and followed posts by using userFollowing ids array
+            follows.map(f => userFollowing.push(f.follower));
+            // Find user posts and followed posts by using userFollowing ids array
             const query = {
-                $or: [{ author: { $in: userFollowing } }, { author: userId }],
+                $or: [{ user: { $in: userFollowing } }, { user: userId }],
             };
             const followedPostsCount = await Post.find(query).countDocuments();
-            const followedPosts = await Post.find(query)
+            let followedPosts = await Post.find(query)
                 .populate({
                     path: 'user',
                     populate: [
@@ -141,7 +140,7 @@ module.exports = {
                     populate: { path: 'user' },
                 })
                 .sort({ createdAt: 'desc' });
-            posts = posts.map(post => {
+            followedPosts = followedPosts.map(post => {
                 let likes = post.likes.filter(like => {
                     return like.user == userId;
                 })

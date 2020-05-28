@@ -1,3 +1,4 @@
+const getRandom = require('../common/random');
 const mongoose = require('mongoose');
 const Follow = require('../models/follows.model');
 const User = require('../models/users.model');
@@ -84,5 +85,36 @@ module.exports = {
     } catch (error) {
       res.json(error.message)
     }
-  }
+  },
+  suggestFollow: async (req, res) => {
+    const userId = req.userId
+    // Find user ids, that current user follows
+    const userFollowingAndMe = [];
+    try {
+      const follows = await Follow.find({ user: userId }, { _id: 0 }).select(
+        'follower'
+      );
+      follows.map(f => userFollowingAndMe.push(f.follower));
+      userFollowingAndMe.push(userId);
+      const query = {
+        isActive: true,
+        _id: { $nin: userFollowingAndMe },
+      };
+      let users = await User.find(query)
+        .populate('posts')
+        .populate('likes')
+        .populate('comments')
+        .populate('following')
+        .populate('followers')
+        .populate('playlists')
+      // .populate('notifications')
+
+      if (users.length > 3) {
+        users = getRandom(users, 3);
+      }
+      return res.json(users)
+    } catch (error) {
+      res.json(error.message)
+    }
+  },
 };

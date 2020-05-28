@@ -47,7 +47,7 @@ module.exports = {
                 })
             // .populate('notifications')
             if (!user) {
-                return res.json({ message: 'User not found'})   
+                return res.json({ message: 'User not found' })
             }
             const condition = user.followers.find(user => {
                 return user.user == userId
@@ -135,7 +135,7 @@ module.exports = {
             res.json(error.message)
         }
     },
-    updateUser: async => {
+    updateUser: async (req, res) => {
 
     }
 };
