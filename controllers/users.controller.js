@@ -25,8 +25,20 @@ module.exports = {
                 .populate('posts')
                 .populate('likes')
                 .populate('comments')
-                .populate('following')
-                .populate('followers')
+                .populate({
+                    path: 'following',
+                    populate: [
+                        { path: 'user' },
+                        { path: 'follower' }
+                    ]
+                })
+                .populate({
+                    path: 'follower',
+                    populate: [
+                        { path: 'user' },
+                        { path: 'follower' }
+                    ]
+                })
                 .populate({
                     path: 'playlists',
                     populate: [

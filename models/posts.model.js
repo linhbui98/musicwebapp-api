@@ -25,6 +25,10 @@ const postSchema = Schema(
         ref: 'Comment',
       },
     ],
+    view: {
+      type: Number,
+      default: 0
+    }
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }

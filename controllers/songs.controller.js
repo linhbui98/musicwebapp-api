@@ -1,5 +1,6 @@
 const path = require('path');
 const Song = require('../models/songs.model');
+const Post = require('../models/posts.model');
 const mongoose = require('mongoose');
 const upload = require('../common/upload');
 const fs = require('fs');
@@ -53,6 +54,11 @@ module.exports = {
             });
 
             readStream = fs.createReadStream(music, { start: start, end: end });
+            let post = await Post.findOne(
+                { src: songName }
+            )
+            post.view = post.view + 1;
+            await post.save()
         } else {
             res.header({
                 'Content-Type': 'audio/mpeg',
