@@ -21,6 +21,16 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true,
     },
+    dob: {
+        type: Date,
+        min: '1900-01-01',
+        max: Date.now(),
+        default: '1998-02-23'
+    },
+    gender: {
+        type: Number,
+        default: 1
+    },
     // role_id:{
     //     type: ObjectId,
     //     required: true,

@@ -9,9 +9,13 @@ router.get('/:username', userController.findByUsername);
 // update user
 router.put('/', userController.updateUser);
 // change avatar
-router.post('/changeAvatar', upload.single('img'), userController.changeAvatar);
+router.put('/changeAvatar', upload.single('img'), userController.changeAvatar);
 // change cover
-router.post('/changeCover', upload.single('img'), userController.changeCover);
+router.put('/changeCover', upload.single('img'), userController.changeCover);
+// update info user
+router.put('/', userController.updateUser);
+// change password
+router.put('/changePassword', userController.changePassword);
 // delete user
 router.put('/inactive', userController.inactiveUser);
 // reactive user

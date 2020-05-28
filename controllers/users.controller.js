@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 const User = require('../models/users.model');
 
 module.exports = {
@@ -135,7 +136,49 @@ module.exports = {
             res.json(error.message)
         }
     },
-    updateUser: async (req, res) => {
+    changePassword: async (req, res) => {
+        const id = req.userId
+        const { oldPassword, newPassword } = req.body
+        const hashPassword = crypto.createHash('sha1').update(oldPassword).digest('base64')
 
+        try {
+
+            const user = await User.findOne({
+                _id: id, 
+                password: hashPassword
+            });
+            
+            if (!user) {
+                return res.json({ message: 'Old password wrong' });
+            }
+
+            user.password = newPassword;
+            await user.save();
+
+            return res.json(user);
+
+        } catch (error) {
+            res.json(error.message)
+        }
+    },
+    updateUser: async (req, res) => {
+        const userId = req.userId
+        const { gender, dob, fullname } = req.body
+
+        try {
+            const user = await User.findOneAndUpdate(
+                { _id: userId },
+                {
+                    fullname: fullname,
+                    gender: gender,
+                    dob: dob
+                },
+                { new: true }
+            );
+
+            return res.json(user)
+        } catch (error) {
+            res.json(error.message)
+        }
     }
 };
