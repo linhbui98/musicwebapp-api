@@ -27,7 +27,12 @@ module.exports = {
                 .populate('comments')
                 .populate('following')
                 .populate('followers')
-                .populate('playlists')
+                .populate({
+                    path: 'playlists',
+                    populate: [
+                        { path: 'posts' }
+                    ]
+                })
                  // .populate('notifications')
             const condition = user.followers.find(user => {
                 return user.user == userId
