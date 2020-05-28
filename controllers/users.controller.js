@@ -33,7 +33,7 @@ module.exports = {
                     ]
                 })
                 .populate({
-                    path: 'follower',
+                    path: 'followers',
                     populate: [
                         { path: 'user' },
                         { path: 'follower' }
