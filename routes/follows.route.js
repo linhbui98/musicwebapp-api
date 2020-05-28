@@ -16,6 +16,6 @@ router.get('/follower/:userId', followController.getFollowerOfUser);
 router.post('/', followController.createFollow);
 
 // delete follows
-router.delete('/:id', followController.deleteFollow);
+router.delete('/:followerId', followController.deleteFollow);
 
 module.exports = router;

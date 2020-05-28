@@ -62,9 +62,13 @@ module.exports = {
     }
   },
   deleteFollow: async (req, res) => {
-    const id = req.params.id
+    const userId = req.userId
+    const followerId = req.params.followerId
     try {
-      const follow = await Follow.findByIdAndRemove(id);
+      const follow = await Follow.findOneAndRemove({
+        user: userId,
+        follower: followerId
+      });
 
       // Delete follow from users collection
       await User.findOneAndUpdate(

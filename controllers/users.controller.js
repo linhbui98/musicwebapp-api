@@ -11,8 +11,8 @@ module.exports = {
                 .populate('following')
                 .populate('followers')
                 .populate('playlists')
-                 // .populate('notifications')
-                return res.json(users)
+            // .populate('notifications')
+            return res.json(users)
         } catch (error) {
             res.json(error.message)
         }
@@ -33,13 +33,16 @@ module.exports = {
                         { path: 'posts' }
                     ]
                 })
-                 // .populate('notifications')
+            // .populate('notifications')
+            if (!user) {
+                return res.json({ message: 'User not found'})   
+            }
             const condition = user.followers.find(user => {
                 return user.user == userId
             })
-            if(condition){
+            if (condition) {
                 user._doc.isFollow = true
-            }else {
+            } else {
                 user._doc.isFollow = false
             }
             return res.json(user)
@@ -55,7 +58,7 @@ module.exports = {
             const user = await User.findOneAndUpdate(
                 { _id: id },
                 { isActive: false },
-                { new: true}
+                { new: true }
             );
             return res.json(user);
 
@@ -70,7 +73,7 @@ module.exports = {
             const user = await User.findOneAndUpdate(
                 { _id: id },
                 { isActive: true },
-                { new: true}
+                { new: true }
             );
             return res.json(user);
 
@@ -96,7 +99,7 @@ module.exports = {
             const user = await User.findOneAndUpdate(
                 { _id: id },
                 { avatar: data.filename },
-                { new: true}
+                { new: true }
             );
             return res.json(user)
 
@@ -112,7 +115,7 @@ module.exports = {
             const user = await User.findOneAndUpdate(
                 { _id: id },
                 { cover: data.filename },
-                { new: true}
+                { new: true }
             );
             return res.json(user)
 
