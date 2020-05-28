@@ -104,6 +104,22 @@ module.exports = {
             res.json(error.message)
         }
     },
+    changeCover: async (req, res) => {
+        const id = req.userId
+        const data = { ...req.file }
+        try {
+
+            const user = await User.findOneAndUpdate(
+                { _id: id },
+                { cover: data.filename },
+                { new: true}
+            );
+            return res.json(user)
+
+        } catch (error) {
+            res.json(error.message)
+        }
+    },
     updateUser: async => {
 
     }

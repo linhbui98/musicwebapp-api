@@ -28,6 +28,11 @@ const userSchema = mongoose.Schema({
     // },
     avatar: {
         type: String,
+        default: '1590664579625-bcf102f42a6.jpg'
+    },
+    cover: {
+        type: String,
+        default: '1590664579625-bcf102f42a6.jpg'
     },
     email: {
         type: String,

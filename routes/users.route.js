@@ -10,6 +10,8 @@ router.get('/:username', userController.findByUsername);
 router.put('/', userController.updateUser);
 // change avatar
 router.post('/changeAvatar', upload.single('img'), userController.changeAvatar);
+// change cover
+router.post('/changeCover', upload.single('img'), userController.changeCover);
 // delete user
 router.put('/inactive', userController.inactiveUser);
 // reactive user
