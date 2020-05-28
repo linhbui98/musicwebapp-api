@@ -64,7 +64,6 @@ module.exports = {
         const userId = req.userId
         const perPage = 5
         const page = req.query.page || 1
-        console.log(userId)
         try {
             let posts = await Post.find({})
                 .populate('user')
@@ -140,6 +139,11 @@ module.exports = {
         })
         try {
             await post.save()
+            await User.findOneAndUpdate(
+                { _id: userId },
+                { $push: { posts: post._id } }
+            );
+
             return res.json(post);
         } catch (error) {
             res.json(error.message)
@@ -175,6 +179,10 @@ module.exports = {
             if (!post) {
                 return res.json('You dont have this post or post not exist!')
             }
+            await User.findOneAndUpdate(
+                { _id: userId },
+                { $pull: { posts: postId } }
+            );
             return res.json(post)
         } catch (error) {
             res.json(error.message)
