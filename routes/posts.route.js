@@ -12,6 +12,8 @@ router.get('/follow', postController.getFollowedPosts);
 router.post('/:userId', postController.getUserPosts);
 // get posts by user like
 router.get('/like', postController.getUserLikePosts);
+// get posts by popular
+router.get('/popular', postController.getPopularPosts);
 // create post
 router.post('/', postController.createPost);
 // update post

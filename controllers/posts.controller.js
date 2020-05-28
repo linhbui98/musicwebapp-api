@@ -14,6 +14,7 @@ module.exports = {
                 .populate('user')
                 .populate('likes')
                 .populate('comments')
+                .sort({ createdAt: 'desc' })
                 .limit(perPage)
                 .skip(perPage * (page - 1))
 
@@ -53,11 +54,12 @@ module.exports = {
                 .populate('user')
                 .populate('likes')
                 .populate('comments')
+                .sort({ createdAt: 'desc' })
                 .limit(perPage)
                 .skip(perPage * (page - 1))
             posts = posts.map(post => {
                 let likes = post.likes.filter(like => {
-                    return like.user == userId;
+                    return like.user == req.userId;
                 })
                 likes.length === 1 ? post._doc.isLike = true : post._doc.isLike = false
 
@@ -79,6 +81,7 @@ module.exports = {
                 .populate('user')
                 .populate('likes')
                 .populate('comments')
+                .sort({ createdAt: 'desc' })
                 .limit(perPage)
                 .skip(perPage * (page - 1))
             posts = posts.filter(post => {
@@ -155,6 +158,30 @@ module.exports = {
             res.json(err.message)
         }
 
+    },
+    getPopularPosts: async (req, res) => {
+        const userId = req.userId
+        try {
+            let posts = await Post.find({})
+                .populate('user')
+                .populate('likes')
+                .populate('comments')
+                .sort({ view: 'desc' })
+                .limit(5);
+            posts = posts.map(post => {
+                let likes = post.likes.filter(like => {
+                    return like.user == userId;
+                })
+                likes.length === 1 ? post._doc.isLike = true : post._doc.isLike = false
+
+                post._doc.countLike = post.likes.length
+                post._doc.countComment = post.comments.length
+                return post;
+            })
+            return res.json(posts)
+        } catch (error) {
+            res.json(error.message)
+        }
     },
     createPost: async (req, res) => {
         const data = { ...req.body }
