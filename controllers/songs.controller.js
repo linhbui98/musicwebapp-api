@@ -54,11 +54,6 @@ module.exports = {
             });
 
             readStream = fs.createReadStream(music, { start: start, end: end });
-            let post = await Post.findOne(
-                { src: songName }
-            )
-            post.view = post.view + 1;
-            await post.save()
         } else {
             res.header({
                 'Content-Type': 'audio/mpeg',
@@ -67,5 +62,10 @@ module.exports = {
             readStream = fs.createReadStream(music);
         }
         readStream.pipe(res);
+        let post = await Post.findOne(
+            { src: songName }
+        )
+        post.view = post.view + 1;
+        await post.save()
     }
 }
