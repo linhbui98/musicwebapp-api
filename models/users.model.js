@@ -112,7 +112,7 @@ const userSchema = mongoose.Schema({
 // Hashes the users password when saving it to DB
 userSchema.pre('save', function (next) {
     const user = this;
-
+    console.log("linh", this.password)
     // only hash the password if it has been modified (or is new)
     if (!user.isModified('password')) return next();
 

@@ -15,6 +15,8 @@ var loginHandle = require('./auth/login').loginHandle
 var signupHandle = require('./auth/signup').signupHandle
 var resendMailVerify = require('./auth/resend').resendMailVerify
 var verifyHandle = require('./auth/verify').verifyHandle
+var resetPassword = require('./auth/resetPassword').resetPassword
+var requestPasswordReset = require('./auth/requestPasswordReset').requestPasswordReset
 var auth = require('./auth/auth')
 
 console.log('dbUrl', dbUrl)
@@ -50,6 +52,8 @@ app.post('/login', loginHandle)
 app.post('/signup', signupHandle)
 app.post('/resend', resendMailVerify)
 app.get('/verify', verifyHandle)
+app.post('/reset', resetPassword)
+app.post('/requestPasswordReset', requestPasswordReset)
 app.use('/api', auth, api)
 // app.use('/api', api)
 

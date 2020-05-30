@@ -15,7 +15,7 @@ const sendEmail = (to, subject, html) => {
     const options = { from: MAIL_USER, to, subject, html };
     transporter.sendMail(options)
   } catch (err) {
-    res.json(err.message)
+    return res.json(err.message)
   }
 
 };
