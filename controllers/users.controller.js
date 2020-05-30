@@ -163,13 +163,13 @@ module.exports = {
     },
     updateUser: async (req, res) => {
         const userId = req.userId
-        const { gender, dob, fullname } = req.body
+        const { gender, dob, fullName } = req.body
 
         try {
             const user = await User.findOneAndUpdate(
                 { _id: userId },
                 {
-                    fullname: fullname,
+                    fullName: fullName,
                     gender: gender,
                     dob: dob
                 },
