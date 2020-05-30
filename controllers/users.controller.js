@@ -144,10 +144,10 @@ module.exports = {
         try {
 
             const user = await User.findOne({
-                _id: id, 
+                _id: id,
                 password: hashPassword
             });
-            
+
             if (!user) {
                 return res.json({ message: 'Old password wrong' });
             }
@@ -166,16 +166,21 @@ module.exports = {
         const { gender, dob, fullName } = req.body
 
         try {
-            const user = await User.findOneAndUpdate(
-                { _id: userId },
-                {
-                    fullName: fullName,
-                    gender: gender,
-                    dob: dob
-                },
-                { new: true }
-            );
+            const user = await User.findById(userId);
+            if(!user) {
+                throw new error('Not found user');
+            }
 
+            if(gender){
+                user.gender = gender;
+            }
+            if(dob){
+                user.dob = dob;
+            }
+            if(fullName){
+                user.fullName = fullName;
+            }
+            await user.save();
             return res.json(user)
         } catch (error) {
             res.json(error.message)
