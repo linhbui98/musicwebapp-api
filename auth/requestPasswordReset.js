@@ -16,8 +16,9 @@ module.exports.requestPasswordReset = async (req, res) => {
 
     // Email user reset link
     const resetLink = `${process.env.FRONTEND_RESETPASSWORD}?token=${token}`
+    const subject = "Reset pass word"
     const html = "Hello,<br> Please Click on the link to reset password.<br><a href=" + resetLink + ">Click here to reset password</a>"
-    await sendMail(email, host, html)
+    await sendMail(email, subject, html)
 
     return res.json({
       message: `A link to reset your password has been sent to ${email}`

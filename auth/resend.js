@@ -13,7 +13,7 @@ module.exports.resendMailVerify = async (req, res) => {
     const link = "http://" + host + "/verify?id=" + token;
     const subject = "Please confirm your Email account"
     const html = "Hello,<br> Please Click on the link to verify your email.<br><a href=" + link + ">Click here to verify</a>"
-    await sendMail(email, host, html)
+    await sendMail(email, subject, html)
     res.json({
       message: 'Resend mail'
     })
