@@ -17,6 +17,10 @@ module.exports = {
     uploadSong: (req, res) => {
         res.send(req.file)
     },
+    downloadSong: (req, res) => {
+        const songName = req.params.name;
+        res.download(path.join(process.cwd(), 'uploads/audios', songName));  
+    },
     removeSong: async (req, res) => {
         const songName = req.params.name
         try {

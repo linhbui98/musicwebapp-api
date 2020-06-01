@@ -13,6 +13,9 @@ router.post('/upload', upload.single('file'), songController.uploadSong);
 // remove song
 router.delete('/:name', songController.removeSong);
 
+// download song
+router.get('/download/:name', songController.downloadSong);
+
 // play song
 router.get('/:name', songController.playSong);
 
