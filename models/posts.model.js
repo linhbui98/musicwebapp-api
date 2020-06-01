@@ -1,4 +1,4 @@
-const mongoose = require ('mongoose');
+const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
 
@@ -9,6 +9,12 @@ const postSchema = Schema(
     src: String,
     name: String,
     description: String,
+    genres: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Genre',
+      }
+    ],
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',

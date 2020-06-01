@@ -13,6 +13,7 @@ var song = require('./songs.route')
 var singer = require('./singers.route')
 var post = require('./posts.route')
 var share = require('./shares.route')
+var genre = require('./genres.route')
 
 router.use('/users', user)
 router.use('/authors', author)
@@ -25,5 +26,6 @@ router.use('/playlists', playlist)
 router.use('/singers', singer)
 router.use('/songs', song)
 router.use('/shares', share)
+router.use('/genres', genre)
 
 module.exports = router

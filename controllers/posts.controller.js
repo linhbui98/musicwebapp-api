@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Post = require('../models/posts.model');
 const User = require('../models/users.model');
-const Playist = require('../models/playlists.model');
+const Genre = require('../models/genres.model');
 const Follow = require('../models/follows.model');
 
 module.exports = {
@@ -190,11 +190,21 @@ module.exports = {
             _id: new mongoose.Types.ObjectId(),
             src: data.src,
             name: data.name,
+            genres: data.genres,
             description: data.description,
             user: userId
         })
         try {
+
             await post.save()
+            await Genre.updateMany(
+                {
+                    _id: { $in: data.genres }
+                },
+                {
+                    $push: { posts: post._id }
+                }
+            )
             await User.findOneAndUpdate(
                 { _id: userId },
                 { $push: { posts: post._id } }
