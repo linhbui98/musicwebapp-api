@@ -10,14 +10,14 @@ var debug = require('debug')('musicwebapp-api:server');
  * Get port from environment and store in Express.
  */
 
-// var port = normalizePort(process.env.PORT || '3000');
+var port = normalizePort(process.env.PORT || '3000');
 // app.set('port', port);
 
 /**
  * Create HTTP server.
  */
 
-const server = require('./socket')
+const server = require('../socket')
 
 
 /**
