@@ -183,6 +183,38 @@ module.exports = {
             res.json(error.message)
         }
     },
+    getGenrePosts: async (req, res) => {
+        const userId = req.userId
+        const genreId = req.params.genreId
+        const perPage = 4
+        const page = req.query.page || 1
+        try {
+            const query = {
+                genres: { $all: genreId }
+            }
+            let posts = await Post.find(query)
+                .populate('genres')
+                .populate('user')
+                .populate('likes')
+                .populate('comments')
+                .sort({ view: 'desc' })
+                .limit(perPage)
+                .skip(perPage * (page - 1));
+            posts = posts.map(post => {
+                let likes = post.likes.filter(like => {
+                    return like.user == userId;
+                })
+                likes.length === 1 ? post._doc.isLike = true : post._doc.isLike = false
+
+                post._doc.countLike = post.likes.length
+                post._doc.countComment = post.comments.length
+                return post;
+            })
+            return res.json(posts)
+        } catch (error) {
+            res.json(error.message)
+        }
+    },
     createPost: async (req, res) => {
         const data = { ...req.body }
         const userId = req.userId
