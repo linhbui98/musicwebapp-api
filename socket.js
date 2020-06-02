@@ -29,7 +29,7 @@ io.on("connection", function (socket) {
     const { hostId, peerId, followers } = streamInfo;
     for(let follower of followers) {
       for(let user of userActives) {
-        if (follower === user._id) {
+        if (follower === user.username) {
           io.to(user.socketId).emit("new stream", { peerId, hostId })
           break;
         }
