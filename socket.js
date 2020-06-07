@@ -24,6 +24,113 @@ let livestreams = {};
 
 let totalViewers = {};
 
+/**
+ * @example [{ socketId, _id, username }]
+ */
+let userActives = {};
+
+/**
+ * @example [{ peerId, host: { id, username, followers: [{ username }] }}]
+ */
+let streamings = [];
+
+io.on("connection", function (socket) {
+  socket.on("livestream", async ({ host, offerSdp }) => {
+    startLivestream(socket, host, offerSdp, function (err, answer) {
+      if (err) {
+        socket.emit("stream_response", { result: "rejected", error });
+      } else {
+        socket.emit("stream_response", { result: "accepted", answer });
+        const { notifyTo, streamId } = livestreams[host.id];
+        const notify = { ...livestreams[host.id], hostId: host.id };
+        for (let follower of notifyTo) {
+          if (userActives[follower]) {
+            io.to(userActives[follower]).emit("new_livestream", notify);
+          }
+        }
+      }
+    });
+  });
+  socket.on("icecandidate_streamer", ({ id, candidate }) => {
+    if (livestreams[id]) {
+      livestreams[id].candidates.push(candidate);
+    }
+  });
+
+  socket.on("icecandidate_viewer", ({ id, candidate }) => {
+    if (totalViewers[id]) {
+      totalViewers[id].candidates.push(candidate);
+    }
+  });
+
+  socket.on("end_livestream", (host) => {
+    if (livestreams[host._id]) {
+      const { viewers, pipeline, streamId } = livestreams[host._id];
+      pipeline.release();
+      viewers.forEach((viewer) => {
+        const { username } = viewer;
+        const notifyEndLivestream = {
+          host,
+          streamId,
+        };
+        if (userActives[username]) {
+          io.to(userActives[username]).emit(
+            "end_livestream",
+            notifyEndLivestream
+          );
+        }
+        viewer.webRtcEndpoint.release();
+      });
+      delete livestreams[host._id];
+    }
+  });
+
+  socket.on("watch_livestream", async (viewerInfo) => {
+    console.log(livestreams)
+    watchLivestream(socket, viewerInfo, function (err, answer) {
+      if (err) {
+        socket.emit("watch_stream_response", { result: "rejected", error });
+      } else {
+        socket.emit("watch_stream_response", { result: "accepted", answer });
+      }
+    });
+  });
+
+  socket.on("list_livestreams", (userId) => {
+    let listLivestreams = [];
+    for (livestream in livestreams) {
+      if (livestream !== userId) {
+        listLivestreams.push({
+          ...livestreams[livestream],
+          hostId: livestream,
+        });
+      }
+    }
+    socket.emit("list_livestreams", listLivestreams);
+  });
+
+  socket.on("user active", (userInfo) => {
+    userActives[userInfo.username] = socket.id;
+    // userActives.push({ socketId: socket.id, ...userInfo });
+  });
+
+  socket.on("disconnect", () => {
+    for (let user in userActives) {
+      if (userActives[user] == socket.id) {
+        delete userActives[user];
+        break
+      }
+    }
+    for(let host in livestreams) {
+      if (livestreams[host].id == socket.id) {
+        delete livestreams[host]
+        break
+      }
+    }
+    // userActives = userActives.filter((active) => active.socketId !== socket.id);
+  });
+});
+
 async function getKurentoClient() {
   try {
     if (!kurentoClient) {
@@ -36,16 +143,6 @@ async function getKurentoClient() {
   }
 }
 
-/**
- * @example [{ socketId, _id, username }]
- */
-let userActives = {};
-
-/**
- * @example [{ peerId, host: { id, username, followers: [{ username }] }}]
- */
-let streamings = [];
-
 function removeLivestream(socketId) {
   delete livestreams[socketId];
 }
@@ -57,6 +154,7 @@ async function startLivestream(socket, host, sdpOffer, callback) {
     pipeline: null,
     webRtcEndpoint: null,
     notifyTo: host.followers,
+    username: host.username,
     candidates: [],
     viewers: [],
   };
@@ -97,10 +195,11 @@ async function watchLivestream(socket, viewerInfo, callback) {
   const { viewer, hostId, offerSdp } = viewerInfo;
   const { viewers, pipeline } = livestreams[hostId];
   const rtcViewer = {
-    // ...viewer,
+    ...viewer,
     webRtcEndpoint: null,
     candidates: [],
   };
+  viewers.push(rtcViewer);
   totalViewers[viewer.id] = rtcViewer;
 
   pipeline.create("WebRtcEndpoint", (err, webRtcEndpoint) => {
@@ -130,121 +229,4 @@ async function watchLivestream(socket, viewerInfo, callback) {
     });
   });
 }
-
-io.on("connection", function (socket) {
-  socket.on("livestream", async ({ host, offerSdp }) => {
-    startLivestream(socket, host, offerSdp, function (err, answer) {
-      if (err) {
-        socket.emit("stream_response", { result: "rejected", error });
-      } else {
-        socket.emit("stream_response", { result: "accepted", answer });
-        const { notifyTo, streamId } = livestreams[host.id];
-        const notify = { host, streamId };
-        for (let follower of notifyTo) {
-          if (userActives[follower]) {
-            io.to(userActives[follower]).emit("new_livestream", notify);
-          }
-        }
-      }
-    });
-  });
-  socket.on("icecandidate_streamer", ({ id, candidate }) => {
-    if (livestreams[id]) {
-      livestreams[id].candidates.push(candidate);
-    }
-  });
-
-  socket.on("icecandidate_viewer", ({ id, candidate }) => {
-    if (totalViewers[id]) {
-      totalViewers[id].candidates.push(candidate);
-      // console.log('push: ', totalViewers[id].candidates.length)
-    }
-  });
-
-  socket.on("view_livestream", async (viewerInfo) => {
-    watchLivestream(socket, viewerInfo, function (err, answer) {
-      if (err) {
-        socket.emit("watch_stream_response", { result: "rejected", error });
-      } else {
-        socket.emit("watch_stream_response", { result: "accepted", answer });
-      }
-    });
-  });
-
-  socket.on("user active", (userInfo) => {
-    userActives[userInfo.username] = socket.id;
-    // userActives.push({ socketId: socket.id, ...userInfo });
-  });
-
-  socket.on("disconnect", () => {
-    for (let user in userActives) {
-      if (userActives[user] == socket.id) {
-        delete userActives[user];
-      }
-    }
-    // userActives = userActives.filter((active) => active.socketId !== socket.id);
-    // streamings = streamings.filter(stream => )
-  });
-
-  // socket.on("new peer", ({ userId, peerId }) => {
-  //   for (let user of userActives) {
-  //     if (user._id === userId) {
-  //       user.peerId = peerId;
-  //       break;
-  //     }
-  //   }
-  //   console.log(userActives);
-  // });
-
-  // socket.on("new stream", (streamInfo) => {
-  //   console.log("new stream");
-  //   streamings.push(streamInfo);
-  //   const { peerId, host } = streamInfo;
-  //   for (let follower of host.followers) {
-  //     for (let user of userActives) {
-  //       if (follower === user.username) {
-  //         io.to(user.socketId).emit("new stream", { peerId, hostId: host.id });
-  //         break;
-  //       }
-  //     }
-  //   }
-  // });
-
-  // socket.on("end stream", (streamInfo) => {
-  //   const { peerId, host } = streamInfo;
-  //   streamings = streamings.filter((stream) => stream.host.id !== host.id);
-  //   for (let follower of host.followers) {
-  //     for (let user of userActives) {
-  //       if (follower === user.username) {
-  //         io.to(user.socketId).emit("end stream", { peerId, hostId: host.id });
-  //         break;
-  //       }
-  //     }
-  //   }
-  // });
-
-  // socket.on("list livestream", followings => {
-  //   for(let following of followings) {
-  //     for(let stream of streamings) {
-  //       if (following === stream.host.username) {
-  //         io
-  //       }
-  //     }
-  //   }
-  //   io.to(user.socketId).emit("list livestream", streamings);
-
-  // })
-
-  socket.on("watch stream", (watcherInfo) => {
-    console.log("watch stream");
-    const { hostId, watcherId } = watcherInfo;
-    for (let user of userActives) {
-      if (hostId === user._id) {
-        io.to(user.socketId).emit("request host call", watcherId);
-        break;
-      }
-    }
-  });
-});
-
 module.exports = server;
