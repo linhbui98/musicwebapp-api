@@ -12,11 +12,13 @@ let kurentoClient = null;
  * {
  *  hostId: {
  *    id: socketId,
+ *    streamId,
  *    pipeline,
  *    webRtcEndpoint,
  *    notifyTo: followers,
  *    candidate,
  *    viewers: [viewerId, ...]
+ *    room: "hostId"
  *  }
  * }
  */
@@ -29,17 +31,15 @@ let totalViewers = {};
  */
 let userActives = {};
 
-/**
- * @example [{ peerId, host: { id, username, followers: [{ username }] }}]
- */
-let streamings = [];
-
 io.on("connection", function (socket) {
   socket.on("livestream", async ({ host, offerSdp }) => {
-    startLivestream(socket, host, offerSdp, function (err, answer) {
-      if (err) {
+    startLivestream(socket, host, offerSdp, function (error, answer) {
+      if (error) {
         socket.emit("stream_response", { result: "rejected", error });
       } else {
+        const roomLivestream = `${host.id}-${host.username}`
+        socket.join(roomLivestream)
+        livestreams[host.id].room = roomLivestream
         socket.emit("stream_response", { result: "accepted", answer });
         const { notifyTo, streamId } = livestreams[host.id];
         const notify = { ...livestreams[host.id], hostId: host.id };
@@ -86,11 +86,12 @@ io.on("connection", function (socket) {
   });
 
   socket.on("watch_livestream", async (viewerInfo) => {
-    console.log(livestreams)
-    watchLivestream(socket, viewerInfo, function (err, answer) {
-      if (err) {
+    watchLivestream(socket, viewerInfo, function (error, answer) {
+      if (error) {
         socket.emit("watch_stream_response", { result: "rejected", error });
       } else {
+        const roomLivestream = livestreams[viewerInfo.hostId].room
+        socket.join(roomLivestream)
         socket.emit("watch_stream_response", { result: "accepted", answer });
       }
     });
@@ -109,7 +110,12 @@ io.on("connection", function (socket) {
     socket.emit("list_livestreams", listLivestreams);
   });
 
-  socket.on("user active", (userInfo) => {
+  socket.on("send_comment_to_livestream", ({ host, info }) => {
+    const room = livestreams[host._id].room
+    io.to(room).emit("receive_comment_from_user", info)
+  })
+
+  socket.on("user_active", (userInfo) => {
     userActives[userInfo.username] = socket.id;
     // userActives.push({ socketId: socket.id, ...userInfo });
   });
@@ -127,7 +133,6 @@ io.on("connection", function (socket) {
         break
       }
     }
-    // userActives = userActives.filter((active) => active.socketId !== socket.id);
   });
 });
 
@@ -143,27 +148,23 @@ async function getKurentoClient() {
   }
 }
 
-function removeLivestream(socketId) {
-  delete livestreams[socketId];
-}
-
 async function startLivestream(socket, host, sdpOffer, callback) {
   const newLiveStream = {
+    ...host,
     id: socket.id,
     streamId: `${new Date().getTime()}-${socket.id}`,
     pipeline: null,
     webRtcEndpoint: null,
     notifyTo: host.followers,
-    username: host.username,
     candidates: [],
-    viewers: [],
+    viewers: []
   };
   livestreams[host.id] = newLiveStream;
   const kurentoClient = await getKurentoClient();
   kurentoClient.create("MediaPipeline", (error, pipeline) => {
     if (error) return callback(error);
     livestreams[host.id].pipeline = pipeline;
-    pipeline.create("WebRtcEndpoint", (err, webRtcEndpoint) => {
+    pipeline.create("WebRtcEndpoint", { useDataChannels: true }, (err, webRtcEndpoint) => {
       if (err) return callback(err);
 
       livestreams[host.id].webRtcEndpoint = webRtcEndpoint;
@@ -172,6 +173,11 @@ async function startLivestream(socket, host, sdpOffer, callback) {
         const candidate = livestreams[host.id].candidates.shift();
         webRtcEndpoint.addIceCandidate(candidate);
       }
+
+      // pipeline.create("RecorderEndpoint", (err, recorder) => {
+      //   if (err) return callback(err)
+      //   webRtcEndpoint.connect()
+      // })
 
       webRtcEndpoint.on("OnIceCandidate", (e) => {
         const candidate = kurento.getComplexType("IceCandidate")(e.candidate);
