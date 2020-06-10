@@ -14,8 +14,13 @@ const commentSchema = Schema(
     },
     user: {
       type: Schema.Types.ObjectId,
+      required: true,
       ref: 'User',
     },
+    stream: {
+      type: Schema.Types.ObjectId,
+      ref: 'Stream',
+    }
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }

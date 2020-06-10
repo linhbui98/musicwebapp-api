@@ -73,6 +73,12 @@ const userSchema = mongoose.Schema({
             ref: 'Post',
         },
     ],
+    streams: [
+        {
+            type: ObjectId,
+            ref: 'Stream',
+        },
+    ],
     likes: [
         {
             type: ObjectId,
