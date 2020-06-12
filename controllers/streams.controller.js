@@ -42,10 +42,27 @@ module.exports = {
             { $push: { comments: comment._id } }
           );
         })).then(async () => {
-          const result = await Stream.findOne({_id: stream._id}).populate('comments')
+          const result = await Stream.findOne({ _id: stream._id }).populate('comments')
           return res.json(result);
         })
       })
+    } catch (error) {
+      res.json(error.message)
+    }
+  },
+  getStreams: async (req, res) => {
+    const userId = req.userId
+    const perPage = 5
+    const page = req.query.page || 1
+    try {
+      const streams = await Stream.find({ user: userId })
+        .populate('user')
+        .populate('comments')
+        .sort({ createdAt: 'desc' })
+        .limit(perPage)
+        .skip(perPage * (page - 1))
+      return res.json(streams);
+
     } catch (error) {
       res.json(error.message)
     }
