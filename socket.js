@@ -97,6 +97,16 @@ io.on("connection", function (socket) {
     });
   });
 
+  socket.on("watch_record_livestream", async (viewerInfo) => {
+    watchRecordLivestream(socket, viewerInfo, function (error, answer) {
+      if (error) {
+        socket.emit("watch_stream_response", { result: "rejected", error });
+      } else {
+        socket.emit("watch_stream_response", { result: "accepted", answer });
+      }
+    });
+  });
+
   socket.on("list_livestreams", (userId) => {
     let listLivestreams = [];
     for (livestream in livestreams) {
@@ -127,7 +137,7 @@ io.on("connection", function (socket) {
         break
       }
     }
-    for(let host in livestreams) {
+    for (let host in livestreams) {
       if (livestreams[host].id == socket.id) {
         delete livestreams[host]
         break
@@ -164,6 +174,10 @@ async function startLivestream(socket, host, sdpOffer, callback) {
   kurentoClient.create("MediaPipeline", (error, pipeline) => {
     if (error) return callback(error);
     livestreams[host.id].pipeline = pipeline;
+
+    const recorder = pipeline.create('RecorderEndpoint', { uri: `file:///tmp/${host.username}-${Date.now()}.mp4` });
+    recorder.record();
+
     pipeline.create("WebRtcEndpoint", { useDataChannels: true }, (err, webRtcEndpoint) => {
       if (err) return callback(err);
 
@@ -173,11 +187,6 @@ async function startLivestream(socket, host, sdpOffer, callback) {
         const candidate = livestreams[host.id].candidates.shift();
         webRtcEndpoint.addIceCandidate(candidate);
       }
-
-      // pipeline.create("RecorderEndpoint", (err, recorder) => {
-      //   if (err) return callback(err)
-      //   webRtcEndpoint.connect()
-      // })
 
       webRtcEndpoint.on("OnIceCandidate", (e) => {
         const candidate = kurento.getComplexType("IceCandidate")(e.candidate);
@@ -198,6 +207,45 @@ async function startLivestream(socket, host, sdpOffer, callback) {
 }
 
 async function watchLivestream(socket, viewerInfo, callback) {
+  const { viewer, hostId, offerSdp } = viewerInfo;
+  // const { viewers, pipeline } = livestreams[hostId];
+  // const rtcViewer = {
+  //   ...viewer,
+  //   webRtcEndpoint: null,
+  //   candidates: [],
+  // };
+  viewers.push(rtcViewer);
+  totalViewers[viewer.id] = rtcViewer;
+
+  pipeline.create("WebRtcEndpoint", (err, webRtcEndpoint) => {
+    if (err) return callback(error);
+    rtcViewer.webRtcEndpoint = webRtcEndpoint;
+
+    while (rtcViewer.candidates.length) {
+      const candidate = rtcViewer.candidates.shift();
+      webRtcEndpoint.addIceCandidate(candidate);
+    }
+
+    webRtcEndpoint.on("OnIceCandidate", (e) => {
+      const candidate = kurento.getComplexType("IceCandidate")(e.candidate);
+      socket.emit("ice_candidate_viewer", candidate);
+    });
+
+    webRtcEndpoint.processOffer(offerSdp, (error, answer) => {
+      if (error) return callback(error);
+
+      livestreams[hostId].webRtcEndpoint.connect(webRtcEndpoint, (e) => {
+        if (e) return callback(e);
+        callback(null, answer);
+        webRtcEndpoint.gatherCandidates((er) => {
+          if (er) return callback(er);
+        });
+      });
+    });
+  });
+}
+
+async function watchRecordLivestream(socket, viewerInfo, callback) {
   const { viewer, hostId, offerSdp } = viewerInfo;
   const { viewers, pipeline } = livestreams[hostId];
   const rtcViewer = {
@@ -233,6 +281,28 @@ async function watchLivestream(socket, viewerInfo, callback) {
         });
       });
     });
+    const options = { uri: `file:///tmp/tungduong98-1591775458611.mp4` }
+
+    pipeline.create("PlayerEndpoint", options, function (error, player) {
+      if (error) return onError(error);
+
+      player.on('EndOfStream', function (event) {
+        pipeline.release();
+        videoPlayer.src = "";
+
+      });
+
+      player.connect(webRtcEndpoint, function (error) {
+        if (error) return onError(error);
+
+        player.play(function (error) {
+          if (error) return onError(error);
+          console.log("Playing ...");
+        });
+      });
+    });
   });
 }
 module.exports = server;
+
+
