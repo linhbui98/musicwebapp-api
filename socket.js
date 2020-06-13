@@ -3,7 +3,7 @@ const http = require("http");
 const server = http.createServer(app);
 const io = require("socket.io")(server);
 const kurento = require("kurento-client");
-
+const redisClient = require("./common/redis");
 const wsKurentoServer = "ws://localhost:8888/kurento";
 let kurentoClient = null;
 
@@ -37,9 +37,11 @@ io.on("connection", function (socket) {
       if (error) {
         socket.emit("stream_response", { result: "rejected", error });
       } else {
-        const roomLivestream = `${host.id}-${host.username}`
-        socket.join(roomLivestream)
-        livestreams[host.id].room = roomLivestream
+        const roomLivestream = `${host.id}-${host.username}`;
+        socket.join(roomLivestream);
+        livestreams[host.id].room = roomLivestream;
+
+        // redisClient.lpush(livestreams[host.id].streamId, 0)
         socket.emit("stream_response", { result: "accepted", answer });
         const { notifyTo, streamId } = livestreams[host.id];
         const notify = { ...livestreams[host.id], hostId: host.id };
@@ -81,17 +83,22 @@ io.on("connection", function (socket) {
         }
         viewer.webRtcEndpoint.release();
       });
+      redisClient.del(host._id);
       delete livestreams[host._id];
     }
   });
 
-  socket.on("watch_livestream", async (viewerInfo) => {
-    watchLivestream(socket, viewerInfo, function (error, answer) {
+  socket.on("watch_livestream", (viewerInfo) => {
+    watchLivestream(socket, viewerInfo, async function (error, answer) {
       if (error) {
         socket.emit("watch_stream_response", { result: "rejected", error });
       } else {
-        const roomLivestream = livestreams[viewerInfo.hostId].room
-        socket.join(roomLivestream)
+        const { viewer, hostId } = viewerInfo;
+        const { room, id, streamId } = livestreams[hostId];
+        socket.join(room);
+        io.to(id).emit("user_join_stream", viewer.username);
+        totalViewers[viewer.id].commentIndex = 0;
+        getMoreComments(streamId, viewer.id, socket);
         socket.emit("watch_stream_response", { result: "accepted", answer });
       }
     });
@@ -121,9 +128,11 @@ io.on("connection", function (socket) {
   });
 
   socket.on("send_comment_to_livestream", ({ host, info }) => {
-    const room = livestreams[host._id].room
-    io.to(room).emit("receive_comment_from_user", info)
-  })
+    const { user, created_at, content } = info;
+    const { streamId, room } = livestreams[host._id];
+    socket.to(room).emit("receive_comment_from_user", info);
+    redisClient.lpush(streamId, JSON.stringify(info));
+  });
 
   socket.on("user_active", (userInfo) => {
     userActives[userInfo.username] = socket.id;
@@ -134,13 +143,13 @@ io.on("connection", function (socket) {
     for (let user in userActives) {
       if (userActives[user] == socket.id) {
         delete userActives[user];
-        break
+        break;
       }
     }
     for (let host in livestreams) {
       if (livestreams[host].id == socket.id) {
-        delete livestreams[host]
-        break
+        delete livestreams[host];
+        break;
       }
     }
   });
@@ -162,24 +171,31 @@ async function startLivestream(socket, host, sdpOffer, callback) {
   const newLiveStream = {
     ...host,
     id: socket.id,
-    streamId: `${new Date().getTime()}-${socket.id}`,
+    streamId: `${new Date().getTime()}_${host.id}`,
     pipeline: null,
     webRtcEndpoint: null,
     notifyTo: host.followers,
     candidates: [],
-    viewers: []
+    viewers: [],
   };
   livestreams[host.id] = newLiveStream;
   const kurentoClient = await getKurentoClient();
   kurentoClient.create("MediaPipeline", (error, pipeline) => {
     if (error) return callback(error);
     livestreams[host.id].pipeline = pipeline;
-
-    const recorder = pipeline.create('RecorderEndpoint', { uri: `file:///tmp/${host.username}-${Date.now()}.mp4` });
-    recorder.record();
-
-    pipeline.create("WebRtcEndpoint", { useDataChannels: true }, (err, webRtcEndpoint) => {
-      if (err) return callback(err);
+    pipeline.create([
+      {
+        type: "RecorderEndpoint",
+        params: { uri: `file:///stream/${newLiveStream.streamId}.webm` },
+      },
+      {
+        type: "WebRtcEndpoint",
+        params: {}
+      }
+    ], function(error, elements) {
+      if (error) return callback(error)
+      const recorder = elements[0]
+      const webRtcEndpoint = elements[1]
 
       livestreams[host.id].webRtcEndpoint = webRtcEndpoint;
 
@@ -202,7 +218,57 @@ async function startLivestream(socket, host, sdpOffer, callback) {
       webRtcEndpoint.gatherCandidates((e) => {
         if (e) return callback(e);
       });
+
+      webRtcEndpoint.connect(recorder, function(err) {
+        if (err) return callback(err)
+        recorder.record(e => {
+          if (e) callback(e)
+        })
+      })
     });
+
+    // pipeline.create("WebRtcEndpoint", (err, webRtcEndpoint) => {
+    //   if (err) return callback(err);
+
+    //   livestreams[host.id].webRtcEndpoint = webRtcEndpoint;
+
+    //   while (livestreams[host.id].candidates.length) {
+    //     const candidate = livestreams[host.id].candidates.shift();
+    //     webRtcEndpoint.addIceCandidate(candidate);
+    //   }
+
+    //   pipeline.create(
+    //     {
+    //       type: "RecorderEndpoint",
+    //       params: { uri: `file:///stream/${newLiveStream.streamId}` },
+    //     },
+    //     (error, recorder) => {
+    //       if (error) return callback(error);
+    //       kurentoClient.connect(webRtcEndpoint, recorder, (err) => {
+    //         recorder.record((e) => {
+    //           if (e) return callback(e);
+    //         });
+    //       });
+    //     }
+    //   );
+
+    //   webRtcEndpoint.on("OnIceCandidate", (e) => {
+    //     const candidate = kurento.getComplexType("IceCandidate")(e.candidate);
+    //     socket.emit("ice_candidate_streamer", candidate);
+    //   });
+
+    //   // webRtcEndpoint.on("")
+
+    //   webRtcEndpoint.processOffer(sdpOffer, (e, answer) => {
+    //     if (e) return callback(e);
+
+    //     callback(null, answer);
+    //   });
+
+    //   webRtcEndpoint.gatherCandidates((e) => {
+    //     if (e) return callback(e);
+    //   });
+    // });
   });
 }
 
@@ -301,6 +367,25 @@ async function watchRecordLivestream(socket, viewerInfo, callback) {
         });
       });
     });
+  });
+}
+
+function getMoreComments(streamId, viewerId, socket) {
+  const { commentIndex } = totalViewers[viewerId];
+  redisClient.llen(streamId, (err, len) => {
+    if (err) return;
+    if (commentIndex < len) {
+      redisClient.lrange(streamId, commentIndex, 20, (err, comments) => {
+        if (err) {
+          return;
+        }
+        totalViewers[viewerId].commentIndex = commentIndex + 20;
+        console.log(totalViewers[viewerId].commentIndex);
+        socket.emit("more_comments", comments);
+      });
+    } else {
+      socket.emit("more_comments", []);
+    }
   });
 }
 module.exports = server;
