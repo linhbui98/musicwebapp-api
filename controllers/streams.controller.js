@@ -5,13 +5,12 @@ const Comment = require('../models/comments.model');
 
 module.exports = {
   record: async (req, res) => {
-    const { src, host, comments } = req.body
+    const { src, comments } = req.body
     const userId = req.userId
     const stream = new Stream({
       _id: new mongoose.Types.ObjectId(),
       src: src,
-      user: userId,
-      host: host
+      user: userId
     })
     try {
 
@@ -24,8 +23,8 @@ module.exports = {
       Promise.all(comments.map(comment => {
         const newComment = new Comment({
           _id: new mongoose.Types.ObjectId(),
-          content: comment,
-          user: userId,
+          content: comment.content,
+          user: comment.userId,
           stream: stream._id
         })
 
