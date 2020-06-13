@@ -10,6 +10,10 @@ const streamSchema = Schema(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
+    host: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
     // likes: [
     //   {
     //     type: Schema.Types.ObjectId,

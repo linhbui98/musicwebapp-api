@@ -5,12 +5,13 @@ const Comment = require('../models/comments.model');
 
 module.exports = {
   record: async (req, res) => {
-    const { src, comments } = req.body
+    const { src, host, comments } = req.body
     const userId = req.userId
     const stream = new Stream({
       _id: new mongoose.Types.ObjectId(),
       src: src,
-      user: userId
+      user: userId,
+      host: host
     })
     try {
 
