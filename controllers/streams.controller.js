@@ -24,6 +24,7 @@ module.exports = {
         const newComment = new Comment({
           _id: new mongoose.Types.ObjectId(),
           content: comment.content,
+          created_at: comment.createdAt,
           user: comment.userId,
           stream: stream._id
         })
