@@ -57,8 +57,18 @@ module.exports = {
     const page = req.query.page || 1
     try {
       const streams = await Stream.find({ user: userId })
-        .populate('user')
-        .populate('comments')
+        .populate({
+          path: 'user',
+          select: ['fullName', 'avatar']
+        })
+        .populate({
+          path: 'comments',
+          options: { sort: { createdAt: 'desc' } },
+          populate: {
+            path: 'user',
+            select: ['fullName', 'avatar']
+          }
+        })
         .sort({ createdAt: 'desc' })
         .limit(perPage)
         .skip(perPage * (page - 1))
