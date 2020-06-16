@@ -194,6 +194,24 @@ io.on("connection", function (socket) {
       }
     }
   });
+
+  socket.on("user_like_post", ({ userLike, postId, author }) => {
+    if (userActives[author._id]) {
+      io.to(userActives[author._id].socketId).emit("user_like_post", ({ userLike, postId }))
+    }
+  })
+
+  socket.on("user_unlike_post", ({ userUnlike, postId, author }) => {
+    if (userActives[author._id]) {
+      io.to(userActives[author._id].socketId).emit("user_unlike_post", ({ userUnlike, postId }))
+    }
+  })
+
+  socket.on("user_comment_post", ({ userComment, postId, author }) => {
+    if (userActives[author._id]) {
+      io.to(userActives[author._id].socketId).emit("user_comment_post", ({ userComment, postId }))
+    }
+  })
 });
 
 async function getKurentoClient() {
