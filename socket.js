@@ -342,6 +342,7 @@ async function watchRecordLivestream(socket, viewerInfo, callback) {
   
       webRtcEndpoint.on("OnIceCandidate", (e) => {
         const candidate = kurento.getComplexType("IceCandidate")(e.candidate);
+        console.log(candidate)
         socket.emit("ice_candidate_viewer_record", candidate);
       });
   
@@ -352,6 +353,13 @@ async function watchRecordLivestream(socket, viewerInfo, callback) {
           if (e) return callback(e)
 
           playerEndpoint.on("EndOfStream", event => {
+            console.log(event)
+            socket.emit("finish_record_livestream")
+            pipeline.release()
+          })
+
+          socket.on("exit_player", () => {
+            console.log("exit_player")
             pipeline.release()
           })
 
