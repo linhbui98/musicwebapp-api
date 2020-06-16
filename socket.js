@@ -4,6 +4,7 @@ const server = http.createServer(app);
 const io = require("socket.io")(server);
 const kurento = require("kurento-client");
 const redisClient = require("./common/redis");
+const { stream } = require("./common/redis");
 const wsKurentoServer = "ws://localhost:8888/kurento";
 let kurentoClient = null;
 
@@ -24,10 +25,29 @@ let kurentoClient = null;
  */
 let livestreams = {};
 
+/**
+ * @example
+ * {
+ *  userId: {
+ *    id,
+ *    username,
+ *    webRtcEndpoint: null,
+ *    candidates: [],
+ *  }
+ * }
+ */
 let totalViewers = {};
 
 /**
- * @example [{ socketId, _id, username }]
+ * @example
+ * {
+ *  userId: {
+ *    socketId,
+ *    username,
+ *    candidates: [],
+ *    webRtcEndpoint: null
+ *  }
+ * }
  */
 let userActives = {};
 
@@ -41,13 +61,16 @@ io.on("connection", function (socket) {
         socket.join(roomLivestream);
         livestreams[host.id].room = roomLivestream;
 
-        // redisClient.lpush(livestreams[host.id].streamId, 0)
-        socket.emit("stream_response", { result: "accepted", answer });
         const { notifyTo, streamId } = livestreams[host.id];
+        socket.emit("stream_response", {
+          result: "accepted",
+          answer,
+          streamInfo: livestreams[host.id],
+        });
         const notify = { ...livestreams[host.id], hostId: host.id };
         for (let follower of notifyTo) {
           if (userActives[follower]) {
-            io.to(userActives[follower]).emit("new_livestream", notify);
+            io.to(userActives[follower].socketId).emit("new_livestream", notify);
           }
         }
       }
@@ -65,9 +88,16 @@ io.on("connection", function (socket) {
     }
   });
 
-  socket.on("end_livestream", (host) => {
+  socket.on("end_livestream", ({ host, isStore }) => {
     if (livestreams[host._id]) {
       const { viewers, pipeline, streamId } = livestreams[host._id];
+      if (isStore) {
+        redisClient.lrange(streamId, 0, -1, (error, comments) => {
+          if (!error) {
+            socket.emit("livestream_comments", comments)
+          }
+        })
+      }
       pipeline.release();
       viewers.forEach((viewer) => {
         const { username } = viewer;
@@ -83,7 +113,7 @@ io.on("connection", function (socket) {
         }
         viewer.webRtcEndpoint.release();
       });
-      redisClient.del(host._id);
+      redisClient.del(streamId);
       delete livestreams[host._id];
     }
   });
@@ -107,12 +137,18 @@ io.on("connection", function (socket) {
   socket.on("watch_record_livestream", async (viewerInfo) => {
     watchRecordLivestream(socket, viewerInfo, function (error, answer) {
       if (error) {
-        socket.emit("watch_stream_response", { result: "rejected", error });
+        socket.emit("watch_record_stream_response", { result: "rejected", error });
       } else {
-        socket.emit("watch_stream_response", { result: "accepted", answer });
+        socket.emit("watch_record_stream_response", { result: "accepted", answer });
       }
     });
   });
+
+  socket.on("icecandidate_viewer_record", ({ id, candidate }) => {
+    if (userActives[id]) {
+      userActives[id].candidates.push(candidate)
+    }
+  })
 
   socket.on("list_livestreams", (userId) => {
     let listLivestreams = [];
@@ -135,13 +171,18 @@ io.on("connection", function (socket) {
   });
 
   socket.on("user_active", (userInfo) => {
-    userActives[userInfo.username] = socket.id;
+    userActives[userInfo._id] = {
+      socketId: socket.id,
+      username: userInfo.username,
+      candidates: [],
+      webRtcEndpoint: null
+    };
     // userActives.push({ socketId: socket.id, ...userInfo });
   });
 
   socket.on("disconnect", () => {
     for (let user in userActives) {
-      if (userActives[user] == socket.id) {
+      if (userActives[user].socketId == socket.id) {
         delete userActives[user];
         break;
       }
@@ -183,135 +224,58 @@ async function startLivestream(socket, host, sdpOffer, callback) {
   kurentoClient.create("MediaPipeline", (error, pipeline) => {
     if (error) return callback(error);
     livestreams[host.id].pipeline = pipeline;
-    pipeline.create([
-      {
-        type: "RecorderEndpoint",
-        params: { uri: `file:///stream/${newLiveStream.streamId}.webm` },
-      },
-      {
-        type: "WebRtcEndpoint",
-        params: {}
-      }
-    ], function(error, elements) {
-      if (error) return callback(error)
-      const recorder = elements[0]
-      const webRtcEndpoint = elements[1]
+    console.log(pipeline)
+    pipeline.create(
+      [
+        {
+          type: "RecorderEndpoint",
+          params: { uri: `file:///stream/${newLiveStream.streamId}.webm` },
+        },
+        {
+          type: "WebRtcEndpoint",
+          params: {},
+        },
+      ],
+      function (error, elements) {
+        if (error) return callback(error);
+        const recorder = elements[0];
+        const webRtcEndpoint = elements[1];
 
-      livestreams[host.id].webRtcEndpoint = webRtcEndpoint;
+        livestreams[host.id].webRtcEndpoint = webRtcEndpoint;
 
-      while (livestreams[host.id].candidates.length) {
-        const candidate = livestreams[host.id].candidates.shift();
-        webRtcEndpoint.addIceCandidate(candidate);
-      }
+        while (livestreams[host.id].candidates.length) {
+          const candidate = livestreams[host.id].candidates.shift();
+          console.log(candidate)
+          webRtcEndpoint.addIceCandidate(candidate);
+        }
 
-      webRtcEndpoint.on("OnIceCandidate", (e) => {
-        const candidate = kurento.getComplexType("IceCandidate")(e.candidate);
-        socket.emit("ice_candidate_streamer", candidate);
-      });
-
-      webRtcEndpoint.processOffer(sdpOffer, (e, answer) => {
-        if (e) return callback(e);
-
-        callback(null, answer);
-      });
-
-      webRtcEndpoint.gatherCandidates((e) => {
-        if (e) return callback(e);
-      });
-
-      webRtcEndpoint.connect(recorder, function(err) {
-        if (err) return callback(err)
-        recorder.record(e => {
-          if (e) callback(e)
-        })
-      })
-    });
-
-    // pipeline.create("WebRtcEndpoint", (err, webRtcEndpoint) => {
-    //   if (err) return callback(err);
-
-    //   livestreams[host.id].webRtcEndpoint = webRtcEndpoint;
-
-    //   while (livestreams[host.id].candidates.length) {
-    //     const candidate = livestreams[host.id].candidates.shift();
-    //     webRtcEndpoint.addIceCandidate(candidate);
-    //   }
-
-    //   pipeline.create(
-    //     {
-    //       type: "RecorderEndpoint",
-    //       params: { uri: `file:///stream/${newLiveStream.streamId}` },
-    //     },
-    //     (error, recorder) => {
-    //       if (error) return callback(error);
-    //       kurentoClient.connect(webRtcEndpoint, recorder, (err) => {
-    //         recorder.record((e) => {
-    //           if (e) return callback(e);
-    //         });
-    //       });
-    //     }
-    //   );
-
-    //   webRtcEndpoint.on("OnIceCandidate", (e) => {
-    //     const candidate = kurento.getComplexType("IceCandidate")(e.candidate);
-    //     socket.emit("ice_candidate_streamer", candidate);
-    //   });
-
-    //   // webRtcEndpoint.on("")
-
-    //   webRtcEndpoint.processOffer(sdpOffer, (e, answer) => {
-    //     if (e) return callback(e);
-
-    //     callback(null, answer);
-    //   });
-
-    //   webRtcEndpoint.gatherCandidates((e) => {
-    //     if (e) return callback(e);
-    //   });
-    // });
-  });
-}
-
-async function watchLivestream(socket, viewerInfo, callback) {
-  const { viewer, hostId, offerSdp } = viewerInfo;
-  // const { viewers, pipeline } = livestreams[hostId];
-  // const rtcViewer = {
-  //   ...viewer,
-  //   webRtcEndpoint: null,
-  //   candidates: [],
-  // };
-  viewers.push(rtcViewer);
-  totalViewers[viewer.id] = rtcViewer;
-
-  pipeline.create("WebRtcEndpoint", (err, webRtcEndpoint) => {
-    if (err) return callback(error);
-    rtcViewer.webRtcEndpoint = webRtcEndpoint;
-
-    while (rtcViewer.candidates.length) {
-      const candidate = rtcViewer.candidates.shift();
-      webRtcEndpoint.addIceCandidate(candidate);
-    }
-
-    webRtcEndpoint.on("OnIceCandidate", (e) => {
-      const candidate = kurento.getComplexType("IceCandidate")(e.candidate);
-      socket.emit("ice_candidate_viewer", candidate);
-    });
-
-    webRtcEndpoint.processOffer(offerSdp, (error, answer) => {
-      if (error) return callback(error);
-
-      livestreams[hostId].webRtcEndpoint.connect(webRtcEndpoint, (e) => {
-        if (e) return callback(e);
-        callback(null, answer);
-        webRtcEndpoint.gatherCandidates((er) => {
-          if (er) return callback(er);
+        webRtcEndpoint.on("OnIceCandidate", (e) => {
+          const candidate = kurento.getComplexType("IceCandidate")(e.candidate);
+          socket.emit("ice_candidate_streamer", candidate);
         });
-      });
-    });
+
+        webRtcEndpoint.processOffer(sdpOffer, (e, answer) => {
+          if (e) return callback(e);
+
+          callback(null, answer);
+        });
+
+        webRtcEndpoint.gatherCandidates((e) => {
+          if (e) return callback(e);
+        });
+
+        webRtcEndpoint.connect(recorder, function (err) {
+          if (err) return callback(err);
+          recorder.record((e) => {
+            if (e) callback(e);
+          });
+        });
+      }
+    );
   });
 }
 
-async function watchRecordLivestream(socket, viewerInfo, callback) {
+function watchLivestream(socket, viewerInfo, callback) {
   const { viewer, hostId, offerSdp } = viewerInfo;
   const { viewers, pipeline } = livestreams[hostId];
   const rtcViewer = {
@@ -347,27 +311,65 @@ async function watchRecordLivestream(socket, viewerInfo, callback) {
         });
       });
     });
-    const options = { uri: `file:///tmp/tungduong98-1591775458611.mp4` }
-
-    pipeline.create("PlayerEndpoint", options, function (error, player) {
-      if (error) return onError(error);
-
-      player.on('EndOfStream', function (event) {
-        pipeline.release();
-        videoPlayer.src = "";
-
-      });
-
-      player.connect(webRtcEndpoint, function (error) {
-        if (error) return onError(error);
-
-        player.play(function (error) {
-          if (error) return onError(error);
-          console.log("Playing ...");
-        });
-      });
-    });
   });
+}
+
+async function watchRecordLivestream(socket, viewerInfo, callback) {
+  const { viewer, streamPath, offerSdp } = viewerInfo
+  const kurentoClient = await getKurentoClient();
+  kurentoClient.create("MediaPipeline", (error, pipeline) => {
+    if (error) return callback(error)
+    pipeline.create([
+      {
+        type: "WebRtcEndpoint",
+        params: {},
+      },
+      {
+        type: "PlayerEndpoint",
+        params: { uri: `file:///stream/${streamPath}.webm` },
+      },
+    ], (err, elements) => {
+      if (err) return callback(err)
+      
+      const webRtcEndpoint = elements[0]
+      const playerEndpoint = elements[1]
+      userActives[viewer.id].webRtcEndpoint = webRtcEndpoint
+
+      while (userActives[viewer.id].candidates.length) {
+        const candidate = userActives[viewer.id].candidates.shift();
+        webRtcEndpoint.addIceCandidate(candidate);
+      }
+  
+      webRtcEndpoint.on("OnIceCandidate", (e) => {
+        const candidate = kurento.getComplexType("IceCandidate")(e.candidate);
+        socket.emit("ice_candidate_viewer_record", candidate);
+      });
+  
+      webRtcEndpoint.processOffer(offerSdp, (error, answer) => {
+        if (error) return callback(error);
+        
+        playerEndpoint.connect(webRtcEndpoint, e => {
+          if (e) return callback(e)
+
+          playerEndpoint.on("EndOfStream", event => {
+            pipeline.release()
+          })
+
+          playerEndpoint.play(e => {
+            if (e) return callback(e)
+            // playerEndpoint.getPosition(e => {
+            //   console.log(e)
+            // })
+            callback(null, answer)
+          })
+          webRtcEndpoint.gatherCandidates((er) => {
+            if (er) return callback(er);
+            console.log("connected")
+          });
+        })
+      });
+    })
+  })
 }
 
 function getMoreComments(streamId, viewerId, socket) {
@@ -380,7 +382,6 @@ function getMoreComments(streamId, viewerId, socket) {
           return;
         }
         totalViewers[viewerId].commentIndex = commentIndex + 20;
-        console.log(totalViewers[viewerId].commentIndex);
         socket.emit("more_comments", comments);
       });
     } else {
@@ -388,6 +389,5 @@ function getMoreComments(streamId, viewerId, socket) {
     }
   });
 }
+
 module.exports = server;
-
-
