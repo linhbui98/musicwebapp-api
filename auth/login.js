@@ -15,8 +15,8 @@ module.exports.loginHandle = async function (req, res) {
             username: username, 
             password: hashPassword, 
             isActive: true 
-        })
-
+        }).select('_id username isActive fullName avatar cover dob gender passsword')
+       
         if (!user) {
             throw constants.LOGIN_FAILED
         }
