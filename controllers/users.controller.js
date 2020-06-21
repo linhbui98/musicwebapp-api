@@ -23,7 +23,10 @@ module.exports = {
         const username = req.params.username
         try {
             let user = await User.findOne({ username: username, isActive: true })
-                .populate('posts')
+                .populate({
+                    path: 'posts',
+                    populate: ['likes']
+                })
                 .populate('likes')
                 .populate('comments')
                 .populate({
@@ -58,6 +61,15 @@ module.exports = {
             } else {
                 user._doc.isFollow = false
             }
+
+            let posts = user.posts.map((post, index) => {
+                let likes = post.likes.filter(like => {
+                    return like.user == userId;
+                })
+                likes.length === 1 ? user.posts[index]._doc.isLike = true 
+                : user.posts[index]._doc.isLike = false
+            })
+            
             return res.json(user)
 
         } catch (error) {
