@@ -66,7 +66,7 @@ module.exports = {
           options: { sort: { createdAt: 'desc' } },
           populate: {
             path: 'user',
-            select: ['fullName', 'avatar']
+            select: ['fullName', 'avatar', 'username']
           }
         })
         .sort({ createdAt: 'desc' })
