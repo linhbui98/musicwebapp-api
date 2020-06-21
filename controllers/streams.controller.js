@@ -69,7 +69,7 @@ module.exports = {
             select: ['fullName', 'avatar', 'username']
           }
         })
-        .sort({ createdAt: 'desc' })
+        .sort({ 'created_at': -1 })
         .limit(perPage)
         .skip(perPage * (page - 1))
       return res.json(streams);
