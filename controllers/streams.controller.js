@@ -63,7 +63,7 @@ module.exports = {
         })
         .populate({
           path: 'comments',
-          options: { sort: { createdAt: 'desc' } },
+          options: { sort: { 'created_at': 'desc' } },
           populate: {
             path: 'user',
             select: ['fullName', 'avatar', 'username']
