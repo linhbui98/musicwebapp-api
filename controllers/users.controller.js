@@ -25,7 +25,8 @@ module.exports = {
             let user = await User.findOne({ username: username, isActive: true })
                 .populate({
                     path: 'posts',
-                    populate: ['likes']
+                    populate: ['likes'],
+                    options: { sort: { 'created_at': 'desc' } },
                 })
                 .populate('likes')
                 .populate('comments')

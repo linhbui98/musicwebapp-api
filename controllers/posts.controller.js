@@ -14,7 +14,7 @@ module.exports = {
                 .populate('user')
                 .populate('likes')
                 .populate('comments')
-                .sort({ createdAt: 'desc' })
+                .sort({ 'created_at': 'desc' })
                 .limit(perPage)
                 .skip(perPage * (page - 1))
 
@@ -54,7 +54,7 @@ module.exports = {
                 .populate('user')
                 .populate('likes')
                 .populate('comments')
-                .sort({ createdAt: 'desc' })
+                .sort({ 'created_at': 'desc' })
                 .limit(perPage)
                 .skip(perPage * (page - 1))
             posts = posts.map(post => {
@@ -81,7 +81,7 @@ module.exports = {
                 .populate('user')
                 .populate('likes')
                 .populate('comments')
-                .sort({ createdAt: 'desc' })
+                .sort({ 'created_at': 'desc' })
                 .limit(perPage)
                 .skip(perPage * (page - 1))
             posts = posts.filter(post => {
@@ -139,10 +139,10 @@ module.exports = {
                 .populate('likes')
                 .populate({
                     path: 'comments',
-                    options: { sort: { createdAt: 'desc' } },
+                    options: { sort: { 'created_at': 'desc' } },
                     populate: { path: 'user' },
                 })
-                .sort({ createdAt: 'desc' });
+                .sort({ 'created_at': 'desc' });
             followedPosts = followedPosts.map(post => {
                 let likes = post.likes.filter(like => {
                     return like.user == userId;
@@ -153,7 +153,7 @@ module.exports = {
                 post._doc.countComment = post.comments.length
                 return post;
             })
-            return res.json({ posts: followedPosts, count: followedPostsCount });
+            return res.json(followedPosts);
         } catch (err) {
             res.json(err.message)
         }
@@ -166,7 +166,7 @@ module.exports = {
                 .populate('user')
                 .populate('likes')
                 .populate('comments')
-                .sort({ view: 'desc' })
+                .sort({ view: 'desc', 'created_at': 'desc' })
                 .limit(5);
             posts = posts.map(post => {
                 let likes = post.likes.filter(like => {

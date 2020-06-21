@@ -21,7 +21,7 @@ module.exports = {
                     path: 'posts',
                     populate: [
                         { path: 'user' }
-                    ]
+                    ],
                 })
             playlists.map(playlist => {
                 playlist._doc.countSong = playlist.posts.length
