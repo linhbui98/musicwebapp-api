@@ -196,19 +196,19 @@ io.on("connection", function (socket) {
   });
 
   socket.on("user_like_post", ({ userLike, postId, author }) => {
-    if (userActives[author._id]) {
+    if (userActives[author._id] && userLike._id !== author._id) {
       io.to(userActives[author._id].socketId).emit("user_like_post", ({ userLike, postId }))
     }
   })
 
   socket.on("user_unlike_post", ({ userUnlike, postId, author }) => {
-    if (userActives[author._id]) {
+    if (userActives[author._id] && userUnlike._id !== author._id) {
       io.to(userActives[author._id].socketId).emit("user_unlike_post", ({ userUnlike, postId }))
     }
   })
 
   socket.on("user_comment_post", ({ userComment, postId, author }) => {
-    if (userActives[author._id]) {
+    if (userActives[author._id] && userComment._id !== author._id) {
       io.to(userActives[author._id].socketId).emit("user_comment_post", ({ userComment, postId }))
     }
   })
@@ -242,12 +242,11 @@ async function startLivestream(socket, host, sdpOffer, callback) {
   kurentoClient.create("MediaPipeline", (error, pipeline) => {
     if (error) return callback(error);
     livestreams[host.id].pipeline = pipeline;
-    console.log(pipeline)
     pipeline.create(
       [
         {
           type: "RecorderEndpoint",
-          params: { uri: `file:///stream/${newLiveStream.streamId}.webm` },
+          params: { uri: `file:///stream/${newLiveStream.streamId}.mp4` },
         },
         {
           type: "WebRtcEndpoint",
@@ -263,7 +262,6 @@ async function startLivestream(socket, host, sdpOffer, callback) {
 
         while (livestreams[host.id].candidates.length) {
           const candidate = livestreams[host.id].candidates.shift();
-          console.log(candidate)
           webRtcEndpoint.addIceCandidate(candidate);
         }
 
@@ -344,7 +342,7 @@ async function watchRecordLivestream(socket, viewerInfo, callback) {
       },
       {
         type: "PlayerEndpoint",
-        params: { uri: `file:///stream/${streamPath}.webm` },
+        params: { uri: `file:///stream/${streamPath}.mp4` },
       },
     ], (err, elements) => {
       if (err) return callback(err)
@@ -360,7 +358,6 @@ async function watchRecordLivestream(socket, viewerInfo, callback) {
   
       webRtcEndpoint.on("OnIceCandidate", (e) => {
         const candidate = kurento.getComplexType("IceCandidate")(e.candidate);
-        console.log(candidate)
         socket.emit("ice_candidate_viewer_record", candidate);
       });
   
@@ -370,8 +367,15 @@ async function watchRecordLivestream(socket, viewerInfo, callback) {
         playerEndpoint.connect(webRtcEndpoint, e => {
           if (e) return callback(e)
 
+          console.log(playerEndpoint.getVideoInfo((e, result) => {
+            if (e) console.log(e)
+            console.log(result)
+          }))
+
+          playerEndpoint.setPosition(2000, (error) => {
+            console.log('position: ', error)
+          })
           playerEndpoint.on("EndOfStream", event => {
-            console.log(event)
             socket.emit("finish_record_livestream")
             pipeline.release()
           })
@@ -383,9 +387,9 @@ async function watchRecordLivestream(socket, viewerInfo, callback) {
 
           playerEndpoint.play(e => {
             if (e) return callback(e)
-            // playerEndpoint.getPosition(e => {
-            //   console.log(e)
-            // })
+            playerEndpoint.getPosition(e => {
+              console.log(e)
+            })
             callback(null, answer)
           })
           webRtcEndpoint.gatherCandidates((er) => {
