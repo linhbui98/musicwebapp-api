@@ -54,7 +54,7 @@ module.exports = {
                 return res.json({ message: 'User not found' })
             }
             const condition = user.followers.find(user => {
-                return user.user == userId
+                return user.user._id == userId
             })
             if (condition) {
                 user._doc.isFollow = true
@@ -69,7 +69,7 @@ module.exports = {
                 likes.length === 1 ? user.posts[index]._doc.isLike = true 
                 : user.posts[index]._doc.isLike = false
             })
-            
+
             return res.json(user)
 
         } catch (error) {
