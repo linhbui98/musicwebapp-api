@@ -367,14 +367,6 @@ async function watchRecordLivestream(socket, viewerInfo, callback) {
         playerEndpoint.connect(webRtcEndpoint, e => {
           if (e) return callback(e)
 
-          console.log(playerEndpoint.getVideoInfo((e, result) => {
-            if (e) console.log(e)
-            console.log(result)
-          }))
-
-          playerEndpoint.setPosition(2000, (error) => {
-            console.log('position: ', error)
-          })
           playerEndpoint.on("EndOfStream", event => {
             socket.emit("finish_record_livestream")
             pipeline.release()
@@ -387,9 +379,6 @@ async function watchRecordLivestream(socket, viewerInfo, callback) {
 
           playerEndpoint.play(e => {
             if (e) return callback(e)
-            playerEndpoint.getPosition(e => {
-              console.log(e)
-            })
             callback(null, answer)
           })
           webRtcEndpoint.gatherCandidates((er) => {
